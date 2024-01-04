@@ -1,0 +1,199 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ssti漏洞 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="ssti漏洞 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="曾经在sharkctf中做出来过一道ssti漏洞,但也是囫囵吞枣,对payload的理解并不很透彻,
+故在此整理
+关于ssti漏洞,参考了以下文章:
+https://zhuanlan.zhihu.com/p/619441473
+https:..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              ssti漏洞
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-26
+              </span>
+              <span>
+                2 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>曾经在sharkctf中做出来过一道ssti漏洞,但也是囫囵吞枣,对payload的理解并不很透彻,<br>
+故在此整理<br>
+关于ssti漏洞,参考了以下文章:<br>
+https://zhuanlan.zhihu.com/p/619441473<br>
+https://www.ngui.cc/el/3892559.html?action=onClick</p>
+<p>理解后发现ssti并不是很难,只需要找到可用的魔术方法,一层层调用直到达到命令执行或者代码执行</p>
+<h2 id="newstarctf2023-week3genshin">newstarctf2023 week3GenShin</h2>
+<p>首先我们要在http返回包的包头中找到<code>/secr3tofpop</code>这个目录<br>
+访问后,传入name参数的值就会被显示出来<br>
+这里就造成了ssti, 也可以看见后端为jinja2模板<br>
+尝试传入{{}},发现被过滤了,根据文章中所描述的,我们可以使用{%%}来绕过<br>
+之后就是调用类下的方法<br>
+事实上,可以构造以下语句来查找可以利用的方法</p>
+<pre><code>{%for i in XXX:%}{%if xxx%}{%print(i)%}{%endif%}{%endfor%}
+</code></pre>
+<p>这里过滤了很多函数,官方给出的payload:</p>
+<pre><code>{% print(get_flashed_messages.__globals__.os[&quot;pop&quot;+&quot;en&quot;](&quot;cat /flag&quot;).read()) %}
+</code></pre>
+<h2 id="ciscn-2019华东南web11">[CISCN 2019华东南]Web11</h2>
+<p>页面中有显示ip的地方,添加xff伪造任意ip,会被回显<br>
+构造xff: {{7*7}},ip显示为49,存在xff<br>
+这里后端使用了php的smarty模板,可以直接在{{}}里执行php代码,payload:<br>
+添加http请求头:      X-Forwarded-For: {{cat /flag}}</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#newstarctf2023-week3genshin">newstarctf2023 week3GenShin</a></li>
+<li><a href="#ciscn-2019%E5%8D%8E%E4%B8%9C%E5%8D%97web11">[CISCN 2019华东南]Web11</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/fsctf-bu-fen-ti-jie/">
+              <h3 class="post-title">
+                FSCTF部分题解
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

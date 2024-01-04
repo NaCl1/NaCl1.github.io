@@ -1,0 +1,222 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>文件上传漏洞 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="文件上传漏洞 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="文件上传
+https://blog.csdn.net/admin18310911366/article/details/107998925
+https://blog.csdn.net/weixin_45588247/article/deta..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              文件上传漏洞
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-05
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="文件上传">文件上传</h1>
+<p>https://blog.csdn.net/admin18310911366/article/details/107998925</p>
+<p>https://blog.csdn.net/weixin_45588247/article/details/119714908</p>
+<h2 id="后缀名绕过">后缀名绕过</h2>
+<p>将.php更改为其他能将php成功解析的后缀名</p>
+<h2 id="mime绕过">MIME绕过</h2>
+<p>即将将http报文中的content-type修改为image/png或其他被允许上传的类型</p>
+<h2 id="利用htaccess绕过">利用.htaccess绕过</h2>
+<p>.htaccess文件（“分布式配置文件”）提供了针对目录改变配置的方法， 即，在一个特定的文档目录中放置一个包含一个或多个指令的文件， 以作用于此目录及其所有子目录。作为用户，所能使用的命令将受到限制。管理员可以通过Apache的AllowOverride指令来设置。</p>
+<p>概述来说，<em><strong>htaccess文件是Apache服务器中的一个配置文件</strong></em>，它负责相关目录下的网页配置。通过htaccess文件，可以帮我们实现：网页301重定向、自定义404错误页面、改变文件扩展名、允许/阻止特定的用户或者目录的访问、禁止目录列表、配置默认文档等功能。</p>
+<p><strong>用途</strong>：重新解析规则绕过黑名单<br>
+<strong>原理</strong>：上传覆盖.htaccess文件，重新解析规则，将上传的图片马以脚本方式解析<br>
+具体实现：<br>
+1、上传.htaccess文件至服务器上传目录，此时apache在解析该目录下的php时将按照文件要求。只要文件名匹配到所定义的字符串，就会将该文件当作php解析。</p>
+<pre><code>&lt;FilesMatch &quot;jpg&quot;&gt;
+
+  SetHandler application/x-httpd-php
+
+&lt;/FilesMatch&gt;
+</code></pre>
+<p>2、上传.htaccess文件设置的关键字的文件名，即上传一个黑名单没有过滤的随意后缀名文件，但文件名中一定要包含jpg，如&quot;123.jpg&quot;，内容为一句话木马。此时&quot;123.jpg&quot;会被Apache当作php解析。</p>
+<h2 id="利用userini绕过">利用.user.ini绕过</h2>
+<p>php.ini是php的一个全局配置文件，对整个web服务起作用；而.user.ini和.htaccess一样是目录的配置文件，.user.ini就是用户自定义的一个php.ini，我们可以利用这个文件来构造后门和隐藏后门。</p>
+<p><strong>实例</strong></p>
+<p>php 配置项中有两个配置可以起到一些作用</p>
+<blockquote>
+<p>auto_prepend_file = <filename>     //包含在文件头<br>
+auto_append_file = <filename>      //包含在文件尾</p>
+</blockquote>
+<p>.user.ini</p>
+<pre><code>// .user.ini
+auto_prepend_file = 1.jpg
+</code></pre>
+<p>1.jpg</p>
+<pre><code>// 1.jpg
+&lt;?php phpinfo();?&gt;
+</code></pre>
+<p>此操作需要三个文件</p>
+<ol>
+<li>.user.ini文件</li>
+<li>服务器原目录下存在一个.php文件</li>
+<li>传入一个.jpg后缀的php木马</li>
+</ol>
+<p>局限<br>
+在.user.ini中使用这条配置也说了是在同目录下的其他.php 文件中包含配置中所指定的文件，也就是说需要该目录下存在.php 文件，通常在文件上传中，一般是专门有一个目录用来存在图片，可能小概率会存在.php 文件。</p>
+<p><strong>但是有时可以使用 ../ 来将文件上传到其他目录，达到一个利用的效果。</strong></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0">文件上传</a>
+<ul>
+<li><a href="#%E5%90%8E%E7%BC%80%E5%90%8D%E7%BB%95%E8%BF%87">后缀名绕过</a></li>
+<li><a href="#mime%E7%BB%95%E8%BF%87">MIME绕过</a></li>
+<li><a href="#%E5%88%A9%E7%94%A8htaccess%E7%BB%95%E8%BF%87">利用.htaccess绕过</a></li>
+<li><a href="#%E5%88%A9%E7%94%A8userini%E7%BB%95%E8%BF%87">利用.user.ini绕过</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/sql-zhu-ru/">
+              <h3 class="post-title">
+                SQL注入
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

