@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://example.com/2024/01/06/NCTF-2023-Web-%E5%A4%8D%E7%8E%B0/</loc>
+    
+    <lastmod>2024-01-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/2024/01/06/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAJava%E7%A8%8B%E5%BA%8F/</loc>
     
     <lastmod>2024-01-06</lastmod>
@@ -56,6 +65,13 @@
 
   
   <url>
+    <loc>http://example.com/tags/NCTF-2023-Web/</loc>
+    <lastmod>2024-01-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/tags/Java/</loc>
     <lastmod>2024-01-06</lastmod>
     <changefreq>weekly</changefreq>
@@ -70,6 +86,13 @@
   </url>
   
 
+  
+  <url>
+    <loc>http://example.com/categories/WriteUp/</loc>
+    <lastmod>2024-01-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
   
   <url>
     <loc>http://example.com/categories/Java/</loc>
