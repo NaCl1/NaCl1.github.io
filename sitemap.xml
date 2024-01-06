@@ -11,6 +11,15 @@
   </url>
   
   <url>
+    <loc>http://example.com/categories/index.html</loc>
+    
+    <lastmod>2024-01-06</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/2024/01/05/hello-world/</loc>
     
     <lastmod>2024-01-05</lastmod>
@@ -29,5 +38,12 @@
 
   
 
+  
+  <url>
+    <loc>http://example.com/categories/test/</loc>
+    <lastmod>2024-01-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
   
 </urlset>
