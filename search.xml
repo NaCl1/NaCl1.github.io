@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>我的第一个Java程序</title>
+      <link href="/2024/01/06/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAJava%E7%A8%8B%E5%BA%8F/"/>
+      <url>/2024/01/06/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAJava%E7%A8%8B%E5%BA%8F/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Java-Code"><a href="#Java-Code" class="headerlink" title="Java Code"></a>Java Code</h1><p>java代码:</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.bug.test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Test</span> &#123;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">System.out.println(<span class="string">&quot;hello,world!&quot;</span>);</span><br><span class="line">System.out.print(<span class="string">&quot;hello,world!&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>测试文章</title>
       <link href="/2024/01/06/%E6%B5%8B%E8%AF%95%E6%96%87%E7%AB%A0/"/>
       <url>/2024/01/06/%E6%B5%8B%E8%AF%95%E6%96%87%E7%AB%A0/</url>

@@ -1,7 +1,10 @@
+http://example.com/2024/01/06/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E4%B8%AAJava%E7%A8%8B%E5%BA%8F/
 http://example.com/tags/index.html
 http://example.com/2024/01/06/%E6%B5%8B%E8%AF%95%E6%96%87%E7%AB%A0/
 http://example.com/categories/index.html
 http://example.com/2024/01/05/hello-world/
 http://example.com/
+http://example.com/tags/Java/
 http://example.com/tags/test/
+http://example.com/categories/Java/
 http://example.com/categories/test/
