@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>idna与utf-8编码漏洞 [SUCTF 2019]Pythonginx</title>
+      <link href="/2024/01/08/idna%E4%B8%8Eutf-8%E7%BC%96%E7%A0%81%E6%BC%8F%E6%B4%9E-SUCTF-2019-Pythonginx/"/>
+      <url>/2024/01/08/idna%E4%B8%8Eutf-8%E7%BC%96%E7%A0%81%E6%BC%8F%E6%B4%9E-SUCTF-2019-Pythonginx/</url>
+      
+        <content type="html"><![CDATA[<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/getUrl&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;POST&#x27;</span>]</span>) </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">getUrl</span>(): </span><br><span class="line">    url = request.args.get(<span class="string">&quot;url&quot;</span>) </span><br><span class="line">    host = parse.urlparse(url).hostname </span><br><span class="line">    <span class="keyword">if</span> host == <span class="string">&#x27;suctf.cc&#x27;</span>: </span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;我扌 your problem? 111&quot;</span> </span><br><span class="line">    parts = <span class="built_in">list</span>(urlsplit(url)) </span><br><span class="line">    host = parts[<span class="number">1</span>] </span><br><span class="line">    <span class="keyword">if</span> host == <span class="string">&#x27;suctf.cc&#x27;</span>: </span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;我扌 your problem? 222 &quot;</span> + host </span><br><span class="line">    newhost = [] </span><br><span class="line">    <span class="keyword">for</span> h <span class="keyword">in</span> host.split(<span class="string">&#x27;.&#x27;</span>): </span><br><span class="line">        newhost.append(h.encode(<span class="string">&#x27;idna&#x27;</span>).decode(<span class="string">&#x27;utf-8&#x27;</span>)) </span><br><span class="line">        parts[<span class="number">1</span>] = <span class="string">&#x27;.&#x27;</span>.join(newhost) </span><br><span class="line">        <span class="comment">#去掉 url 中的空格 </span></span><br><span class="line">        finalUrl = urlunsplit(parts).split(<span class="string">&#x27; &#x27;</span>)[<span class="number">0</span>] </span><br><span class="line">        host = parse.urlparse(finalUrl).hostname </span><br><span class="line">        <span class="keyword">if</span> host == <span class="string">&#x27;suctf.cc&#x27;</span>: </span><br><span class="line">            <span class="keyword">return</span> urllib.request.urlopen(finalUrl).read() </span><br><span class="line">        <span class="keyword">else</span>: </span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;我扌 your problem? 333&quot;</span></span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> 字符编码 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> idna与utf-8编码漏洞 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>NCTF 2023 Web 复现</title>
       <link href="/2024/01/06/NCTF-2023-Web-%E5%A4%8D%E7%8E%B0/"/>
       <url>/2024/01/06/NCTF-2023-Web-%E5%A4%8D%E7%8E%B0/</url>
