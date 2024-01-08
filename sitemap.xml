@@ -74,7 +74,7 @@
 
   
   <url>
-    <loc>http://example.com/tags/NCTF-2023-Web/</loc>
+    <loc>http://example.com/tags/Java/</loc>
     <lastmod>2024-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -88,7 +88,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/Java/</loc>
+    <loc>http://example.com/tags/NCTF-2023-Web/</loc>
     <lastmod>2024-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -104,7 +104,7 @@
 
   
   <url>
-    <loc>http://example.com/categories/WriteUp/</loc>
+    <loc>http://example.com/categories/Java/</loc>
     <lastmod>2024-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -118,7 +118,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/Java/</loc>
+    <loc>http://example.com/categories/WriteUp/</loc>
     <lastmod>2024-01-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
