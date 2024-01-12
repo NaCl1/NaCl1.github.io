@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>网鼎杯 2020 朱雀组 Nmap</title>
+      <link href="/2024/01/09/%E7%BD%91%E9%BC%8E%E6%9D%AF-2020-%E6%9C%B1%E9%9B%80%E7%BB%84-Nmap/"/>
+      <url>/2024/01/09/%E7%BD%91%E9%BC%8E%E6%9D%AF-2020-%E6%9C%B1%E9%9B%80%E7%BB%84-Nmap/</url>
+      
+        <content type="html"><![CDATA[<h1 id="网鼎杯-2020-朱雀组-Nmap"><a href="#网鼎杯-2020-朱雀组-Nmap" class="headerlink" title="[网鼎杯 2020 朱雀组]Nmap"></a>[网鼎杯 2020 朱雀组]Nmap</h1><p>一个在线nmap工具,第一反应应该是<code>;</code> <code>||</code> <code>&amp;&amp;</code>拼接其他命令</p><p>无果.</p><p>那么就可以猜测nmap是否有一些特殊的参数可以利用了</p><p>查询nmap中文文档,发现有可以输出内容到文件的参数:<a href="https://nmap.org/man/zh/man-output.html">https://nmap.org/man/zh/man-output.html</a></p><p>可以手动测试一下</p><p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240112200133393.png" alt="image-20240112200133393"></p><p>这会把一个php一句话木马保存到文件中,并且后缀名是可以被我们自定义为.php的</p><p>但是这里是加了waf的,不过很容易能够测试出来是过滤了’php’</p><p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240112200505004.png" alt="image-20240112200505004"></p><p>这里使用php短标签绕过就行</p><p>payload: </p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host=&lt;?= @eval($_POST[nacl]);?&gt;&#x27; -oG shell.phtml &#x27;</span><br></pre></td></tr></table></figure><p>这里同sql注入一样,需要闭合一下单引号</p><p>直接在网站根目录就能访问到木马</p><p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240112210140474.png" alt="image-20240112210140474"></p><p>但是这里的敏感字符被转译了</p><p>实际上最初的题目似乎就是这样做的,官方wp:<a href="https://blog.csdn.net/Pdsdt1/article/details/106199660/">https://blog.csdn.net/Pdsdt1/article/details/106199660/</a></p><p>但在buu上题目似乎被魔改了</p><p>这里网上的wp采用另一个参数<code>iL</code>来读取&#x2F;flag下的内容</p><p>paylaod:</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host=127.0.0.1&#x27; -iL /flag -oN flag.txt &#x27;</span><br></pre></td></tr></table></figure><p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240112210950828.png" alt="image-20240112210950828"></p><p>直接访问得到flag,这是由于<code>-iL</code>在扫描到非主机名时会报错而把内容显示出来</p><p>不过此方法并不够完美,因为我们无法提前得知flag的位置</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> buu刷题记录 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> nmap上传shell </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>De1CTF 2019 SSRF Me</title>
       <link href="/2024/01/08/De1CTF-2019-SSRF-Me/"/>
       <url>/2024/01/08/De1CTF-2019-SSRF-Me/</url>
