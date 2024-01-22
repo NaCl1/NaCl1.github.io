@@ -1,3 +1,4 @@
+http://example.com/2024/01/22/GCTF-2023-web/
 http://example.com/2024/01/22/%E7%AE%80%E6%98%93baidu%E9%A1%B5%E9%9D%A2/
 http://example.com/2024/01/21/js%E5%9F%BA%E7%A1%80/
 http://example.com/2024/01/22/CSS%E5%9F%BA%E7%A1%80/
