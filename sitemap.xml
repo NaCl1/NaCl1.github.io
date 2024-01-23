@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://example.com/2024/01/23/WesternCTF2018-shrine/</loc>
+    
+    <lastmod>2024-01-23</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/2024/01/23/BJDCTF2020-Cookie-is-so-stable/</loc>
     
     <lastmod>2024-01-23</lastmod>
@@ -171,6 +180,13 @@
     <priority>1.0</priority>
   </url>
 
+  
+  <url>
+    <loc>http://example.com/tags/Flask/</loc>
+    <lastmod>2024-01-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
   
   <url>
     <loc>http://example.com/tags/idna%E4%B8%8Eutf-8%E7%BC%96%E7%A0%81%E6%BC%8F%E6%B4%9E/</loc>
