@@ -1,3 +1,4 @@
+http://example.com/2024/01/28/nssctf-round-17-basic-web/
 http://example.com/2024/01/24/%E5%88%9D%E6%AD%A5%E8%AE%A4%E8%AF%86NodeJs-VM%E5%92%8CVM2%E6%B2%99%E7%AE%B1%E9%80%83%E9%80%B8/
 http://example.com/2024/01/24/BJDCTF2020-EasySearch/
 http://example.com/2024/01/23/WesternCTF2018-shrine/
