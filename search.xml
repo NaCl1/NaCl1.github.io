@@ -131,9 +131,9 @@
       
         <tags>
             
-            <tag> 命令注入 </tag>
-            
             <tag> ssti </tag>
+            
+            <tag> 命令注入 </tag>
             
             <tag> phar反序列化 </tag>
             
@@ -271,9 +271,9 @@
       
         <tags>
             
-            <tag> Flask审计 </tag>
-            
             <tag> ssti </tag>
+            
+            <tag> Flask审计 </tag>
             
             <tag> Python原型链污染(类污染) </tag>
             
@@ -559,9 +559,9 @@
       
         <tags>
             
-            <tag> Flask审计 </tag>
-            
             <tag> ssti </tag>
+            
+            <tag> Flask审计 </tag>
             
             <tag> jinja2 </tag>
             
