@@ -1,0 +1,201 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>WesternCTF2018 shrine | NaCl's Blog</title><meta name="author" content="NaCl"><meta name="copyright" content="NaCl"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="[WesternCTF2018]shrineshrine  1import flask import os app &#x3D; flask.Flask(__name__) app.config[&amp;#x27;FLAG&amp;#x27;] &#x3D; os.environ.pop(&amp;#x27;FLAG&amp;#x27;) @app.route(&amp;#x27;&#x2F;&amp;#x27;) def index(): return open(__f">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WesternCTF2018 shrine">
+<meta property="og:url" content="http://example.com/2024/01/23/WesternCTF2018-shrine/index.html">
+<meta property="og:site_name" content="NaCl&#39;s Blog">
+<meta property="og:description" content="[WesternCTF2018]shrineshrine  1import flask import os app &#x3D; flask.Flask(__name__) app.config[&amp;#x27;FLAG&amp;#x27;] &#x3D; os.environ.pop(&amp;#x27;FLAG&amp;#x27;) @app.route(&amp;#x27;&#x2F;&amp;#x27;) def index(): return open(__f">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/head.jpg">
+<meta property="article:published_time" content="2024-01-23T14:59:00.000Z">
+<meta property="article:modified_time" content="2024-02-28T07:47:52.236Z">
+<meta property="article:author" content="NaCl">
+<meta property="article:tag" content="ssti">
+<meta property="article:tag" content="Flask secret_key">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/head.jpg"><link rel="shortcut icon" href="/img/head.jpg"><link rel="canonical" href="http://example.com/2024/01/23/WesternCTF2018-shrine/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.12.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.32/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'WesternCTF2018 shrine',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-02-28 15:47:52'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="NaCl's Blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/head.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">48</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">46</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">NaCl's Blog</a></span><div id="menus"></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="nav-right"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">WesternCTF2018 shrine</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-01-23T14:59:00.000Z" title="发表于 2024-01-23 22:59:00">2024-01-23</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-02-28T07:47:52.236Z" title="更新于 2024-02-28 15:47:52">2024-02-28</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/buu%E5%88%B7%E9%A2%98%E8%AE%B0%E5%BD%95/">buu刷题记录</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="WesternCTF2018 shrine"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="WesternCTF2018-shrine"><a href="#WesternCTF2018-shrine" class="headerlink" title="[WesternCTF2018]shrine"></a>[WesternCTF2018]shrine</h1><p>shrine </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">import flask import os app = flask.Flask(__name__) app.config[&#x27;FLAG&#x27;] = os.environ.pop(&#x27;FLAG&#x27;) @app.route(&#x27;/&#x27;) def index(): return open(__file__).read() @app.route(&#x27;/shrine/&#x27;) def shrine(shrine): def safe_jinja(s): s = s.replace(&#x27;(&#x27;, &#x27;&#x27;).replace(&#x27;)&#x27;, &#x27;&#x27;) blacklist = [&#x27;config&#x27;, &#x27;self&#x27;] return &#x27;&#x27;.join([&#x27;&#123;&#123;% set &#123;&#125;=None%&#125;&#125;&#x27;.format(c) for c in blacklist]) + s return flask.render_template_string(safe_jinja(shrine)) if __name__ == &#x27;__main__&#x27;: app.run(debug=True) </span><br></pre></td></tr></table></figure>
+
+<p>很无语这种python放一坨…</p>
+<p>手动format一下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> flask </span><br><span class="line"><span class="keyword">import</span> os </span><br><span class="line">app = flask.Flask(__name__) </span><br><span class="line">app.config[<span class="string">&#x27;FLAG&#x27;</span>] = os.environ.pop(<span class="string">&#x27;FLAG&#x27;</span>) </span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/&#x27;</span></span>) </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>(): </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">open</span>(__file__).read() </span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/shrine/&#x27;</span></span>) </span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">shrine</span>(<span class="params">shrine</span>): </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">safe_jinja</span>(<span class="params">s</span>): </span><br><span class="line">        s = s.replace(<span class="string">&#x27;(&#x27;</span>, <span class="string">&#x27;&#x27;</span>).replace(<span class="string">&#x27;)&#x27;</span>, <span class="string">&#x27;&#x27;</span>) </span><br><span class="line">        blacklist = [<span class="string">&#x27;config&#x27;</span>, <span class="string">&#x27;self&#x27;</span>] </span><br><span class="line">        <span class="keyword">return</span> <span class="string">&#x27;&#x27;</span>.join([<span class="string">&#x27;&#123;&#123;% set &#123;&#125;=None%&#125;&#125;&#x27;</span>.<span class="built_in">format</span>(c) <span class="keyword">for</span> c <span class="keyword">in</span> blacklist]) + s </span><br><span class="line">    <span class="keyword">return</span> flask.render_template_string(safe_jinja(shrine)) </span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>: </span><br><span class="line">    app.run(debug=<span class="literal">True</span>) </span><br></pre></td></tr></table></figure>
+
+<p>很明显是ssti,flag被放在了当前app的config里</p>
+<p>在<code>/shrine/</code>这个路由下接收一个参数并使用<code>safe_jinja(s)</code>这个自定义的函数对输入做了一些简单的过滤</p>
+<p>config和self被禁了,是不能直接传入config来查看flag的__(注意,这里并不是正则来禁掉config)__</p>
+<p>看了大佬的文章,总结一下</p>
+<h3 id="在Flask中有4个全局变量"><a href="#在Flask中有4个全局变量" class="headerlink" title="在Flask中有4个全局变量"></a>在Flask中有4个全局变量</h3><h4 id="current-app"><a href="#current-app" class="headerlink" title="current_app"></a>current_app</h4><p>代表当前flask程序实例</p>
+<h4 id="g"><a href="#g" class="headerlink" title="g"></a>g</h4><p>g作为flask程序全局的一个临时变量。充当媒介的功能</p>
+<h4 id="requests对象"><a href="#requests对象" class="headerlink" title="requests对象"></a>requests对象</h4><p>客户端发送的HTTP请求内容</p>
+<h4 id="session"><a href="#session" class="headerlink" title="session"></a>session</h4><h4 id="用户会话"><a href="#用户会话" class="headerlink" title="用户会话"></a>用户会话</h4><p>而current_app又是flask的实例,也就是说。所有和flask有关的。都会放在current_app里面</p>
+<p>既然current_app是一个变量,那就一定存在于__globals__里面,因为globals是python中所有变量的集合</p>
+<p>这里我们只能通过函数去调用__globals__。获得所有全局变量</p>
+<h3 id="flask自带的两个函数"><a href="#flask自带的两个函数" class="headerlink" title="flask自带的两个函数"></a>flask自带的两个函数</h3><h4 id="url-for"><a href="#url-for" class="headerlink" title="url_for()"></a>url_for()</h4><p>url_for会根据传入的路由器函数名,返回该路由对应的URL,在模板中始终使用url_for()就可以安全的修改路由绑定的URL,则不比担心模板中渲染出错的链接:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123;url_for(<span class="string">&#x27;home&#x27;</span>)&#125;&#125;</span><br><span class="line">/</span><br></pre></td></tr></table></figure>
+
+<p>如果我们定义的路由URL是带有参数的,则可以把它们作为关键字参数传入url_for(),Flask会把他们填充进最终生成的URL中:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;&#123; url_for(<span class="string">&#x27;post&#x27;</span>, post_id=<span class="number">1</span>)&#125;&#125;</span><br><span class="line">/post/<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="get-flashed-messages"><a href="#get-flashed-messages" class="headerlink" title="get_flashed_messages()"></a>get_flashed_messages()</h4><p>这个函数会返回之前在flask中通过flask()传入的消息的列表，flash函数的作用很简单,可以把由Python字符串表示的消息加入一个消息队列中，再使用get_flashed_message()函数取出它们并消费掉：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;%<span class="keyword">for</span> message <span class="keyword">in</span> get_flashed_messages()%&#125;</span><br><span class="line">    &#123;&#123;message&#125;&#125;</span><br><span class="line">&#123;%endfor%&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看见这两个函数都是可以调用到__globals__魔术方法的,并且有current_app这个变量</p>
+<ul>
+<li>__globals__  : 函数中全局变量的字典的引用(函数所属模块的全局命名空间)</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240124000216790.png" alt="image-20240124000216790"></p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240124000328684.png" alt="image-20240124000328684"></p>
+<p>这个current_app实例就是当前运行的这个app,所有可以直接访问到它下面的config</p>
+<p>payload:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/shrine/&#123;&#123;get_flashed_messages.__globals__.current_app.config&#125;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240124000738986.png" alt="image-20240124000738986"></p>
+<h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><p><a target="_blank" rel="noopener" href="https://guokeya.github.io/post/R7LJ4aK5U/">https://guokeya.github.io/post/R7LJ4aK5U/</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/enjolras_fuu/article/details/82229073">https://blog.csdn.net/enjolras_fuu/article/details/82229073</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">NaCl</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/01/23/WesternCTF2018-shrine/">http://example.com/2024/01/23/WesternCTF2018-shrine/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">NaCl's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/ssti/">ssti</a><a class="post-meta__tags" href="/tags/Flask-secret-key/">Flask secret_key</a></div><div class="post_share"><div class="social-share" data-image="/img/head.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2024/01/24/BJDCTF2020-EasySearch/" title="BJDCTF2020 EasySearch"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">BJDCTF2020 EasySearch</div></div></a></div><div class="next-post pull-right"><a href="/2024/01/23/BJDCTF2020-Cookie-is-so-stable/" title="BJDCTF2020 Cookie is so stable"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">BJDCTF2020 Cookie is so stable</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2024/01/23/BJDCTF2020-Cookie-is-so-stable/" title="BJDCTF2020 Cookie is so stable"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-23</div><div class="title">BJDCTF2020 Cookie is so stable</div></div></a></div><div><a href="/2024/01/28/GYCTF2020-FlaskApp/" title="GYCTF2020 FlaskApp"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-28</div><div class="title">GYCTF2020 FlaskApp</div></div></a></div><div><a href="/2024/04/28/XYCTF-2024-Web/" title="XYCTF 2024 Web"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-04-28</div><div class="title">XYCTF 2024 Web</div></div></a></div><div><a href="/2024/03/01/%E5%AE%89%E6%B4%B5%E6%9D%AFSwagger-docs/" title="Swagger docs"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-03-01</div><div class="title">Swagger docs</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/head.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">NaCl</div><div class="author-info__description">hello,world</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">48</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">46</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#WesternCTF2018-shrine"><span class="toc-number">1.</span> <span class="toc-text">[WesternCTF2018]shrine</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8Flask%E4%B8%AD%E6%9C%894%E4%B8%AA%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="toc-number">1.0.1.</span> <span class="toc-text">在Flask中有4个全局变量</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#current-app"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">current_app</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#g"><span class="toc-number">1.0.1.2.</span> <span class="toc-text">g</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#requests%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.0.1.3.</span> <span class="toc-text">requests对象</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#session"><span class="toc-number">1.0.1.4.</span> <span class="toc-text">session</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%A8%E6%88%B7%E4%BC%9A%E8%AF%9D"><span class="toc-number">1.0.1.5.</span> <span class="toc-text">用户会话</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#flask%E8%87%AA%E5%B8%A6%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%87%BD%E6%95%B0"><span class="toc-number">1.0.2.</span> <span class="toc-text">flask自带的两个函数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#url-for"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">url_for()</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#get-flashed-messages"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">get_flashed_messages()</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-number">1.0.3.</span> <span class="toc-text">参考链接</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/06/06/Java-RMI/" title="Java RMI">Java RMI</a><time datetime="2024-06-06T01:55:14.000Z" title="发表于 2024-06-06 09:55:14">2024-06-06</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/05/30/buuoj%E4%B8%80%E6%AC%A1%E5%88%B7%E4%B8%AA%E5%A4%9F/" title="buuoj一次刷个够">buuoj一次刷个够</a><time datetime="2024-05-30T05:51:33.000Z" title="发表于 2024-05-30 13:51:33">2024-05-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/05/30/%E7%AC%AC%E4%BA%8C%E5%B1%8A%E9%BB%84%E6%B2%B3%E6%B5%81%E5%9F%9F%E5%AE%89%E5%85%A8%E6%8A%80%E8%83%BD%E6%8C%91%E6%88%98%E8%B5%9BWeb/" title="第二届黄河流域安全技能挑战赛Web">第二届黄河流域安全技能挑战赛Web</a><time datetime="2024-05-30T05:27:49.000Z" title="发表于 2024-05-30 13:27:49">2024-05-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/05/30/Dragon-Knight-CTF-2024/" title="Dragon Knight CTF 2024">Dragon Knight CTF 2024</a><time datetime="2024-05-30T03:42:58.000Z" title="发表于 2024-05-30 11:42:58">2024-05-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/05/30/H-NCTF-2024-Web/" title="H&amp;NCTF 2024 Web">H&amp;NCTF 2024 Web</a><time datetime="2024-05-30T03:36:58.000Z" title="发表于 2024-05-30 11:36:58">2024-05-30</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By NaCl</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.12.0"></script><script src="/js/main.js?v=4.12.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.32/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/click-show-text.min.js" data-mobile="false" data-text="I,LOVE,YOU" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.12.0"></script></div></div></body></html>
