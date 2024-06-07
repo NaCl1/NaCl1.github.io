@@ -131,9 +131,9 @@
       
         <tags>
             
-            <tag> ssti </tag>
-            
             <tag> 命令注入 </tag>
+            
+            <tag> ssti </tag>
             
             <tag> phar反序列化 </tag>
             
@@ -457,9 +457,9 @@
       
         <tags>
             
-            <tag> MongoDB </tag>
-            
             <tag> nosql注入 </tag>
+            
+            <tag> MongoDB </tag>
             
         </tags>
       
@@ -478,11 +478,11 @@
       
         <tags>
             
-            <tag> nosql注入 </tag>
-            
             <tag> 文件上传 </tag>
             
             <tag> sql注入 </tag>
+            
+            <tag> nosql注入 </tag>
             
             <tag> 命令注入 </tag>
             
@@ -949,9 +949,9 @@
       
         <tags>
             
-            <tag> nmap参数注入 </tag>
-            
             <tag> PHP escapeshellarg()+escapeshellcmd() 之殇 </tag>
+            
+            <tag> nmap参数注入 </tag>
             
         </tags>
       
