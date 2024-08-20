@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>PHP代码审计之CMS漏洞初探 | n4c1's Blog</title><meta name="author" content="n4c1"><meta name="copyright" content="n4c1"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#0d0d0d"><meta name="description" content="PHP代码审计之CMS漏洞初探Java代码实在难懂, 索性先暂时放一放, 最近心血来潮想提升一下php代码审计的能力, (真的很想体验一下真实的挖漏洞) 话不多说我们随便找几个cms已经公布的漏洞来练练手 jizhicms v2.3.3 sql注入这个2.3.3版本下载不到但是能下到2.3.2 https:&#x2F;&#x2F;gitee.com&#x2F;Cherry_toto&#x2F;jizhicms&#x2F;repository&#x2F;ar">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP代码审计之CMS漏洞初探">
+<meta property="og:url" content="http://example.com/2024/08/01/PHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E4%B9%8BCMS%E6%BC%8F%E6%B4%9E%E5%88%9D%E6%8E%A2/index.html">
+<meta property="og:site_name" content="n4c1&#39;s Blog">
+<meta property="og:description" content="PHP代码审计之CMS漏洞初探Java代码实在难懂, 索性先暂时放一放, 最近心血来潮想提升一下php代码审计的能力, (真的很想体验一下真实的挖漏洞) 话不多说我们随便找几个cms已经公布的漏洞来练练手 jizhicms v2.3.3 sql注入这个2.3.3版本下载不到但是能下到2.3.2 https:&#x2F;&#x2F;gitee.com&#x2F;Cherry_toto&#x2F;jizhicms&#x2F;repository&#x2F;ar">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/head.jpg">
+<meta property="article:published_time" content="2024-08-01T15:32:50.000Z">
+<meta property="article:modified_time" content="2024-08-20T07:29:37.827Z">
+<meta property="article:author" content="n4c1">
+<meta property="article:tag" content="PHP代码设计">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/head.jpg"><link rel="shortcut icon" href="/img/head.jpg"><link rel="canonical" href="http://example.com/2024/08/01/PHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E4%B9%8BCMS%E6%BC%8F%E6%B4%9E%E5%88%9D%E6%8E%A2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.12.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.32/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'PHP代码审计之CMS漏洞初探',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-08-20 15:29:37'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="n4c1's Blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/head.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">56</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">47</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/home_page.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="n4c1's Blog"><span class="site-name">n4c1's Blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">PHP代码审计之CMS漏洞初探</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-08-01T15:32:50.000Z" title="发表于 2024-08-01 23:32:50">2024-08-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-08-20T07:29:37.827Z" title="更新于 2024-08-20 15:29:37">2024-08-20</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="PHP代码审计之CMS漏洞初探"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="PHP代码审计之CMS漏洞初探"><a href="#PHP代码审计之CMS漏洞初探" class="headerlink" title="PHP代码审计之CMS漏洞初探"></a>PHP代码审计之CMS漏洞初探</h1><p>Java代码实在难懂, 索性先暂时放一放, 最近心血来潮想提升一下php代码审计的能力, (真的很想体验一下真实的挖漏洞)</p>
+<p>话不多说我们随便找几个cms已经公布的漏洞来练练手</p>
+<h2 id="jizhicms-v2-3-3-sql注入"><a href="#jizhicms-v2-3-3-sql注入" class="headerlink" title="jizhicms v2.3.3 sql注入"></a>jizhicms v2.3.3 sql注入</h2><p>这个2.3.3版本下载不到但是能下到2.3.2</p>
+<p><a target="_blank" rel="noopener" href="https://gitee.com/Cherry_toto/jizhicms/repository/archive/2.3.2">https://gitee.com/Cherry_toto/jizhicms/repository/archive/2.3.2</a></p>
+<p>搭建好环境开干</p>
+<p>我测试了一下也是存在这个漏洞的</p>
+<p>首先漏洞的点在这个位置</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">POST</span> <span class="string">/index.php/admins/Member/memberedit.html</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>jizhicms</span><br><span class="line"><span class="attribute">Content-Length</span><span class="punctuation">: </span>234</span><br><span class="line"><span class="attribute">Accept</span><span class="punctuation">: </span>*/*</span><br><span class="line"><span class="attribute">X-Requested-With</span><span class="punctuation">: </span>XMLHttpRequest</span><br><span class="line"><span class="attribute">User-Agent</span><span class="punctuation">: </span>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36</span><br><span class="line"><span class="attribute">Content-Type</span><span class="punctuation">: </span>application/x-www-form-urlencoded; charset=UTF-8</span><br><span class="line"><span class="attribute">Origin</span><span class="punctuation">: </span>http://jizhicms</span><br><span class="line"><span class="attribute">Referer</span><span class="punctuation">: </span>http://jizhicms/index.php/admins/Member/memberedit/id/2.html</span><br><span class="line"><span class="attribute">Accept-Encoding</span><span class="punctuation">: </span>gzip, deflate</span><br><span class="line"><span class="attribute">Accept-Language</span><span class="punctuation">: </span>zh-CN,zh;q=0.9</span><br><span class="line"><span class="attribute">Cookie</span><span class="punctuation">: </span>PHPSESSID=apkas20el5jn5o9070b1gj3176</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>close</span><br><span class="line"></span><br><span class="line"><span class="language-apache"><span class="attribute">go</span>=<span class="number">1</span>&amp;id=<span class="number">1</span>&amp;username=aaa&amp;openid=rtr&amp;sex=<span class="number">0</span>&amp;gid=<span class="number">0</span>&amp;litpic=&amp;file=&amp;tel=&amp;jifen=<span class="number">0</span>.<span class="number">00</span>&amp;money=<span class="number">0</span>.<span class="number">00</span>&amp;email=&amp;province=&amp;city=&amp;address=&amp;regtime=<span class="number">2024</span>-<span class="number">08</span>-<span class="number">01</span>+<span class="number">22</span>%<span class="number">3</span>A33%<span class="number">3</span>A07&amp;logintime=<span class="number">2024</span>-<span class="number">08</span>-<span class="number">01</span>+<span class="number">22</span>%<span class="number">3</span>A33%<span class="number">3</span>A07&amp;signature=&amp;birthday=&amp;pid=<span class="number">0</span>&amp;isshow=<span class="number">1</span>&amp;pass=&amp;repass=</span></span><br></pre></td></tr></table></figure>
+
+<p>id参数存在注入</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240801234103555.png" alt="image-20240801234103555"></p>
+<p>那么就去代码中看看</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802003811944.png" alt="image-20240802003811944"></p>
+<p>不难定位到这个逻辑实现的位置</p>
+<p>从源码来看这个cms是一个MVC架构,</p>
+<p>我们主要去看update方法</p>
+<p>调试一下很容易就能定位到</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802004056234.png" alt="image-20240802004056234"></p>
+<p>这段代码是没有过滤的, 有可能存在过滤的位置也就是<code>__prepera_format</code>和<code>runSql</code>这两个方法</p>
+<p>我们先去调试<code>__prepera_format</code>这个方法</p>
+<p>不难看出这里是有问题的</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802122153511.png" alt="image-20240802122153511"></p>
+<p>这里的</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="title function_ invoke__">stripos</span>(<span class="variable">$value</span>-&gt;Type,<span class="string">&#x27;int&#x27;</span>)!==<span class="literal">false</span> || <span class="title function_ invoke__">stripos</span>(<span class="variable">$value</span>-&gt;Type,<span class="string">&#x27;decimal&#x27;</span>)!==<span class="literal">false</span>)&#123;</span><br><span class="line">				</span><br><span class="line">				<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]))&#123;</span><br><span class="line">					<span class="keyword">if</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="string">&#x27;&#x27;</span> &amp;&amp; <span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="literal">false</span>)&#123;</span><br><span class="line">						<span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="variable">$rows</span>[<span class="variable">$field</span>];</span><br><span class="line">					&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">						<span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="number">0</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				</span><br><span class="line">			&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本意应该是通过<code>jz_member</code>的结构来格式化我们查询的内容, 而在<code>jz_member</code>表中<code>id</code>字段应该是<code>int(11)</code>这里虽然正确判断出了id字段为int型, 但是在处理数据时并没有把我们传入的id强转为数字型而是直接进行了赋值</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802122628190.png" alt="image-20240802122628190"></p>
+<p>可以看见id字段仍然是字符串</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802123335763.png" alt="image-20240802123335763"></p>
+<p>同样的问题, <code>$condition</code>也就是传入的id字段的内容,直接被拼接到了where语句后</p>
+<p>我们去跟进<code>runSql</code>也是看不见任何的过滤</p>
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802123538306.png" alt="image-20240802123538306"></p>
+<p>由此造成了sql注入</p>
+<p>那么我们简单修复一下</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">__prepera_format</span>(<span class="params"><span class="variable">$rows</span></span>)</span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="variable">$table</span> = <span class="built_in">self</span>::<span class="variable">$table</span>;</span><br><span class="line">		<span class="variable">$stmt</span> = <span class="variable language_">$this</span>-&gt;db-&gt;<span class="title function_ invoke__">getTable</span>(<span class="variable">$table</span>);  </span><br><span class="line">		<span class="variable">$stmt</span>-&gt;<span class="title function_ invoke__">execute</span>();  </span><br><span class="line">		<span class="variable">$columns</span> = <span class="variable">$stmt</span>-&gt;<span class="title function_ invoke__">fetchAll</span>(PDO::<span class="variable constant_">FETCH_CLASS</span>);</span><br><span class="line">		<span class="variable">$newcol</span> = <span class="keyword">array</span>();</span><br><span class="line">		<span class="keyword">foreach</span> (<span class="variable">$columns</span> <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$value</span>) &#123;</span><br><span class="line">			<span class="variable">$field</span> = <span class="title function_ invoke__">strtolower</span>(<span class="variable">$value</span>-&gt;Field);</span><br><span class="line">            </span><br><span class="line">			<span class="keyword">if</span>(<span class="title function_ invoke__">stripos</span>(<span class="variable">$value</span>-&gt;Type,<span class="string">&#x27;int&#x27;</span>)!==<span class="literal">false</span>)&#123;</span><br><span class="line">				</span><br><span class="line">				<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]))&#123;</span><br><span class="line">					<span class="keyword">if</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="string">&#x27;&#x27;</span> &amp;&amp; <span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="literal">false</span>)&#123;</span><br><span class="line">						<span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="title function_ invoke__">intval</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]);</span><br><span class="line">					&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">						<span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="number">0</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				</span><br><span class="line">			&#125;<span class="keyword">elseif</span> (<span class="title function_ invoke__">stripos</span>(<span class="variable">$value</span>-&gt;Type,<span class="string">&#x27;decimal&#x27;</span>)!==<span class="literal">false</span>)&#123;</span><br><span class="line">                <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]))&#123;</span><br><span class="line">                    <span class="keyword">if</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="string">&#x27;&#x27;</span> &amp;&amp; <span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="literal">false</span>)&#123;</span><br><span class="line">                        <span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="title function_ invoke__">floatval</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]);</span><br><span class="line">                    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">                        <span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="number">0.0</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span>&#123;</span><br><span class="line">				<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]))&#123;</span><br><span class="line">					<span class="keyword">if</span>(<span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="string">&#x27;&#x27;</span> &amp;&amp; <span class="variable">$rows</span>[<span class="variable">$field</span>]!==<span class="literal">false</span> )&#123;</span><br><span class="line">						<span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="variable">$rows</span>[<span class="variable">$field</span>];</span><br><span class="line">					&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">						<span class="variable">$newcol</span>[<span class="variable">$field</span>] = <span class="literal">null</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				</span><br><span class="line">				</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="variable">$newcol</span>;</span><br><span class="line">		<span class="comment">//return array_intersect_key($rows,$newcol);</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/NaCl1/PicGo/main/image-20240802125221708.png" alt="image-20240802125221708"></p>
+<p>可以看见此时sqlmap已经跑不出来了</p>
+<p>实际上在2.3.2版本是有全局字符串过滤的, 但是并没有包含对id的过滤</p>
+<p>官方的修复手法简单粗暴, 在<code>get_fields_data</code>函数中加上了:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="keyword">isset</span>(<span class="variable">$data</span>[<span class="string">&#x27;id&#x27;</span>])) &#123;</span><br><span class="line">                <span class="variable">$data</span>[<span class="string">&#x27;id&#x27;</span>] = <span class="title function_ invoke__">format_param</span>(<span class="variable">$data</span>[<span class="string">&#x27;id&#x27;</span>]);</span><br><span class="line">            &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的format_param函数将id强转为int</p>
+<p><a target="_blank" rel="noopener" href="https://www.yijinglab.com/specialized/20230308140107">https://www.yijinglab.com/specialized/20230308140107</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">n4c1</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2024/08/01/PHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E4%B9%8BCMS%E6%BC%8F%E6%B4%9E%E5%88%9D%E6%8E%A2/">http://example.com/2024/08/01/PHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E4%B9%8BCMS%E6%BC%8F%E6%B4%9E%E5%88%9D%E6%8E%A2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">n4c1's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/PHP%E4%BB%A3%E7%A0%81%E8%AE%BE%E8%AE%A1/">PHP代码设计</a></div><div class="post_share"><div class="social-share" data-image="/img/head.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2024/08/19/JDBC%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" title="JDBC反序列化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">JDBC反序列化</div></div></a></div><div class="next-post pull-right"><a href="/2024/07/27/%E4%BB%8ESanic%E5%88%B0Sanic-s-revenge/" title="从Sanic到Sanic's revenge"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">从Sanic到Sanic's revenge</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/head.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">n4c1</div><div class="author-info__description">hello,world</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">56</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">47</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#PHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E4%B9%8BCMS%E6%BC%8F%E6%B4%9E%E5%88%9D%E6%8E%A2"><span class="toc-number">1.</span> <span class="toc-text">PHP代码审计之CMS漏洞初探</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#jizhicms-v2-3-3-sql%E6%B3%A8%E5%85%A5"><span class="toc-number">1.1.</span> <span class="toc-text">jizhicms v2.3.3 sql注入</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/08/19/JDBC%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" title="JDBC反序列化">JDBC反序列化</a><time datetime="2024-08-19T12:19:10.000Z" title="发表于 2024-08-19 20:19:10">2024-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/08/01/PHP%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1%E4%B9%8BCMS%E6%BC%8F%E6%B4%9E%E5%88%9D%E6%8E%A2/" title="PHP代码审计之CMS漏洞初探">PHP代码审计之CMS漏洞初探</a><time datetime="2024-08-01T15:32:50.000Z" title="发表于 2024-08-01 23:32:50">2024-08-01</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/07/27/%E4%BB%8ESanic%E5%88%B0Sanic-s-revenge/" title="从Sanic到Sanic's revenge">从Sanic到Sanic's revenge</a><time datetime="2024-07-27T09:35:21.000Z" title="发表于 2024-07-27 17:35:21">2024-07-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/07/25/FastJson/" title="FastJson">FastJson</a><time datetime="2024-07-25T14:54:58.000Z" title="发表于 2024-07-25 22:54:58">2024-07-25</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/07/25/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" title="Shiro反序列化">Shiro反序列化</a><time datetime="2024-07-25T11:46:37.000Z" title="发表于 2024-07-25 19:46:37">2024-07-25</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By n4c1</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.12.0"></script><script src="/js/main.js?v=4.12.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.32/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/click-show-text.min.js" data-mobile="false" data-text="Java,Python,PHP,Node,Golang,C#,Tomcat,Apache,SqlInjection,SSTI,LFI,XSS,Nmap,BurpSuite,Hack,Docker" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.12.0"></script></div></div></body></html>
